@@ -20,6 +20,8 @@ type RecentHarvestsProps = {
   batches: HarvestBatch[];
   onEdit: (batch: HarvestBatch) => void;
   onDelete: (batchId: string) => void;
+  onViewHistory: () => void;
+  showHistory: boolean;
 };
 
 const StatusBadge = ({ status, isActive }: { status: HarvestBatch['status'], isActive?: boolean }) => {
@@ -50,18 +52,20 @@ const StatusBadge = ({ status, isActive }: { status: HarvestBatch['status'], isA
   );
 };
 
-export function RecentHarvests({ batches, onEdit, onDelete }: RecentHarvestsProps) {
+export function RecentHarvests({ batches, onEdit, onDelete, onViewHistory, showHistory }: RecentHarvestsProps) {
   return (
     <section>
       <div className="flex items-center justify-between mb-6">
         <div>
-          <h2 className="text-3xl font-bold text-foreground">Your Recent Harvests</h2>
+          <h2 className="text-3xl font-bold text-foreground">
+            {showHistory ? "Full Harvest History" : "Your Active Harvests"}
+          </h2>
           <p className="text-gray-500">
-            Track the status of your produce on the marketplace.
+            {showHistory ? "All your past and present batches." : "Track the status of your produce on the marketplace."}
           </p>
         </div>
-        <Button variant="link" className="text-primary font-semibold">
-          View History <ArrowRight className="ml-2 h-4 w-4" />
+        <Button variant="link" className="text-primary font-semibold" onClick={onViewHistory}>
+          {showHistory ? "View Active Only" : "View History"} <ArrowRight className="ml-2 h-4 w-4" />
         </Button>
       </div>
 

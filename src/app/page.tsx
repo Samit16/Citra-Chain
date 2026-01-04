@@ -18,6 +18,7 @@ export default function Home() {
   const { contract, account } = useWallet();
   const [loading, setLoading] = useState(false);
   const [editingBatch, setEditingBatch] = useState<{ id: string, quantity: number, pricePerKg?: number } | null>(null);
+  const [showHistory, setShowHistory] = useState(false);
 
   // Initial fetch
   useEffect(() => {
@@ -101,6 +102,10 @@ export default function Home() {
     }
   };
 
+  const displayedBatches = showHistory
+    ? batches
+    : batches.filter(b => b.status !== 'Sold' && b.isActive !== false);
+
   return (
     <div className="flex min-h-screen flex-col bg-background text-foreground">
       <Header />
@@ -116,9 +121,11 @@ export default function Home() {
           <div className="flex justify-center p-8">Loading blockchain data...</div>
         ) : (
           <RecentHarvests
-            batches={batches}
+            batches={displayedBatches}
             onEdit={handleEdit}
             onDelete={handleDelete}
+            onViewHistory={() => setShowHistory(!showHistory)}
+            showHistory={showHistory}
           />
         )}
         <EditBatchDialog

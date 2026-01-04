@@ -157,17 +157,30 @@ export default function BatchDetailPage({ params }: { params: { batchId: string 
                             </div>
 
                             {/* QR Code Section - ONLY here and Verify page as requested */}
+                            {/* QR Code Section */}
                             <Card className="border-none shadow-lg bg-white/50 backdrop-blur-sm">
                                 <CardContent className="p-6 flex flex-col items-center text-center">
                                     <div className="bg-white p-4 rounded-xl shadow-inner border border-gray-100 mb-4">
                                         <QRCodeSVG
-                                            value={`${typeof window !== 'undefined' ? window.location.origin : ''}/verify?batchId=${batch.id}`}
-                                            size={150}
-                                            level="H"
+                                            value={JSON.stringify({
+                                                "Product": "Nagpur Orange (GI Tagged)",
+                                                "BatchId": batch.id,
+                                                "Origin": "Nagpur, Maharashtra, India",
+                                                "Farmer": batch.farmer,
+                                                "HarvestDate": format(batch.harvestDate, 'yyyy-MM-dd'),
+                                                "Quantity": `${batch.quantity} kg`,
+                                                "Contract": CONTRACT_ADDRESS,
+                                                "Network": "Sepolia Testnet"
+                                            }, null, 2)}
+                                            size={200}
+                                            level="M"
+                                            includeMargin={true}
                                         />
                                     </div>
                                     <h3 className="font-bold text-gray-900">Crop Passport</h3>
-                                    <p className="text-sm text-gray-500">Scan to verify authenticity on Citra-Chain</p>
+                                    <p className="text-xs text-gray-500 max-w-[200px] mt-1">
+                                        Scan to view full harvest details immediately.
+                                    </p>
                                 </CardContent>
                             </Card>
                         </div>
