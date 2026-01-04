@@ -15,6 +15,7 @@ type WalletContextType = {
     provider: ethers.BrowserProvider | null;
     contract: ethers.Contract | null;
     connectWallet: () => Promise<void>;
+    disconnectWallet: () => void;
     isConnected: boolean;
 };
 
@@ -50,6 +51,12 @@ export function WalletProvider({ children }: { children: React.ReactNode }) {
             // If contract initialization fails (e.g. wrong network), we still set account but no contract
             console.error("Error setting up contract:", e);
         }
+    };
+
+    const disconnectWallet = () => {
+        setAccount(null);
+        setProvider(null);
+        setContract(null);
     };
 
     const connectWallet = async () => {
@@ -93,6 +100,7 @@ export function WalletProvider({ children }: { children: React.ReactNode }) {
                 provider,
                 contract,
                 connectWallet,
+                disconnectWallet,
                 isConnected: !!account
             }}
         >

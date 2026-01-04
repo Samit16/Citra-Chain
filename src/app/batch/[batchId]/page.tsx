@@ -1,18 +1,18 @@
 'use client';
 
-import { useSearchParams } from 'next/navigation';
-import { useEffect, useState } from 'react';
 import { useWallet } from '@/context/WalletContext';
 import { Header } from '@/components/shared/header';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
-import { Loader2, ShieldCheck, ShoppingCart, User } from 'lucide-react';
-import { format } from 'date-fns';
+import { Loader2, ShieldCheck, ShoppingCart, User, QrCode } from 'lucide-react';
+import { useEffect, useState } from 'react';
 import { ethers } from 'ethers';
 import { useToast } from '@/hooks/use-toast';
 import Image from 'next/image';
 import { CONTRACT_ADDRESS, CONTRACT_ABI } from '@/lib/contract-config';
+import { QRCodeSVG } from 'qrcode.react';
+import { format } from 'date-fns';
 
 type BatchDetails = {
     id: string;
@@ -24,9 +24,8 @@ type BatchDetails = {
     sold: boolean;
 };
 
-export default function VerifyPage() {
-    const searchParams = useSearchParams();
-    const batchId = searchParams.get('batchId');
+export default function BatchDetailPage({ params }: { params: { batchId: string } }) {
+    const { batchId } = params;
     const { contract: walletContract, account, isConnected, connectWallet } = useWallet();
     const { toast } = useToast();
 
@@ -35,16 +34,13 @@ export default function VerifyPage() {
     const [purchasing, setPurchasing] = useState(false);
 
     useEffect(() => {
-        if (batchId) {
-            fetchBatch();
-        }
+        fetchBatch();
     }, [batchId, walletContract]);
 
     const fetchBatch = async () => {
         setLoading(true);
         let contractToUse = walletContract;
 
-        // Try read-only if not connected
         if (!contractToUse && typeof window !== 'undefined' && window.ethereum) {
             try {
                 const provider = new ethers.BrowserProvider(window.ethereum);
@@ -53,16 +49,14 @@ export default function VerifyPage() {
         }
 
         if (!contractToUse) {
-            // If we really can't get a contract, stop loading.
-            // (Ideally we'd fallback to a public RPC here but that's out of scope/config)
             setLoading(false);
             return;
         }
 
         try {
-            // batches(id) => [farmer, quantity, price, date, sold]
             const data = await contractToUse.batches(batchId);
 
+            // Check if batch exists (simple check: non-zero farmer)
             if (data.farmer === ethers.ZeroAddress) {
                 toast({ title: "Batch not found", variant: "destructive" });
                 setLoading(false);
@@ -72,7 +66,7 @@ export default function VerifyPage() {
             const priceWei = data.pricePerKgWei || data.pricePerKg || BigInt(0);
 
             setBatch({
-                id: batchId!,
+                id: batchId,
                 farmer: data.farmer,
                 quantity: Number(data.quantity),
                 pricePerKgWei: BigInt(priceWei),
@@ -82,11 +76,6 @@ export default function VerifyPage() {
             });
         } catch (error) {
             console.error("Error fetching batch:", error);
-            toast({
-                title: "Error",
-                description: "Failed to load batch details.",
-                variant: "destructive"
-            });
         } finally {
             setLoading(false);
         }
@@ -95,6 +84,7 @@ export default function VerifyPage() {
     const handleBuy = async () => {
         if (!walletContract || !batch) return;
 
+        // ISSUE 2: Prevent buying own batch
         if (account && batch.farmer.toLowerCase() === account.toLowerCase()) {
             toast({
                 title: "Action Not Allowed",
@@ -106,7 +96,6 @@ export default function VerifyPage() {
 
         setPurchasing(true);
         try {
-            // Calculate total price in Wei
             const totalPrice = BigInt(batch.quantity) * batch.pricePerKgWei;
 
             const tx = await walletContract.buyBatch(batch.id, {
@@ -124,7 +113,7 @@ export default function VerifyPage() {
                 title: "Purchase Successful!",
                 description: "You have successfully bought this batch.",
             });
-            fetchBatch(); // Refresh status
+            fetchBatch();
         } catch (error: any) {
             console.error("Purchase error:", error);
             toast({
@@ -137,33 +126,52 @@ export default function VerifyPage() {
         }
     };
 
-    if (!batchId) return <div>Invalid URL</div>;
+    if (!batchId) return <div>Invalid Batch ID</div>;
+
     const isOwner = account && batch && account.toLowerCase() === batch.farmer.toLowerCase();
 
     return (
         <div className="min-h-screen bg-background flex flex-col">
             <Header />
             <main className="container mx-auto px-4 py-12 flex-1 flex items-center justify-center">
-
-                {loading || !batch ? (
+                {loading || (!batch) ? (
                     <div className="flex items-center gap-2 text-xl text-gray-500">
                         <Loader2 className="animate-spin" /> Loading batch data...
                     </div>
                 ) : (
                     <div className="grid md:grid-cols-2 gap-12 w-full max-w-5xl">
-                        <div className="relative h-[400px] md:h-auto rounded-3xl overflow-hidden shadow-2xl">
-                            <Image
-                                src={`https://picsum.photos/seed/${batch.id}/800/800`}
-                                alt="Harvest Image"
-                                fill
-                                className="object-cover"
-                            />
-                            <div className="absolute top-6 left-6 bg-white/90 backdrop-blur px-4 py-2 rounded-full shadow-lg flex items-center gap-2">
-                                <ShieldCheck className="text-blue-600 h-5 w-5" />
-                                <span className="font-bold text-blue-900 upercase tracking-wide text-sm">Blockchain Verified</span>
+                        {/* Left Side: Image & QR */}
+                        <div className="space-y-6">
+                            <div className="relative h-[400px] rounded-3xl overflow-hidden shadow-2xl">
+                                <Image
+                                    src={`https://picsum.photos/seed/${batch.id}/800/800`}
+                                    alt="Harvest Image"
+                                    fill
+                                    className="object-cover"
+                                />
+                                <div className="absolute top-6 left-6 bg-white/90 backdrop-blur px-4 py-2 rounded-full shadow-lg flex items-center gap-2">
+                                    <ShieldCheck className="text-blue-600 h-5 w-5" />
+                                    <span className="font-bold text-blue-900 uppercase tracking-wide text-sm">Blockchain Verified</span>
+                                </div>
                             </div>
+
+                            {/* QR Code Section - ONLY here and Verify page as requested */}
+                            <Card className="border-none shadow-lg bg-white/50 backdrop-blur-sm">
+                                <CardContent className="p-6 flex flex-col items-center text-center">
+                                    <div className="bg-white p-4 rounded-xl shadow-inner border border-gray-100 mb-4">
+                                        <QRCodeSVG
+                                            value={`${typeof window !== 'undefined' ? window.location.origin : ''}/verify?batchId=${batch.id}`}
+                                            size={150}
+                                            level="H"
+                                        />
+                                    </div>
+                                    <h3 className="font-bold text-gray-900">Crop Passport</h3>
+                                    <p className="text-sm text-gray-500">Scan to verify authenticity on Citra-Chain</p>
+                                </CardContent>
+                            </Card>
                         </div>
 
+                        {/* Right Side: Details & Actions */}
                         <div className="space-y-8 py-4">
                             <div>
                                 <h1 className="text-4xl font-black mb-2 text-foreground">Nagpur Orange Batch #{batch.id}</h1>

@@ -21,6 +21,7 @@ import { format } from 'date-fns';
 import { useWallet } from '@/context/WalletContext';
 import { useEffect } from 'react';
 import { ethers } from 'ethers';
+import { CONTRACT_ADDRESS, CONTRACT_ABI } from '@/lib/contract-config';
 
 const ProductCard = ({ product }: { product: CustomerHarvestBatch }) => (
   <Card className="group relative overflow-hidden rounded-3xl border-none bg-white/70 shadow-sm hover:shadow-xl hover:bg-white transition-all duration-300 backdrop-blur-sm">
@@ -75,7 +76,7 @@ const ProductCard = ({ product }: { product: CustomerHarvestBatch }) => (
           <p className="text-xs text-gray-400 font-medium mb-0.5">Price per kg</p>
           <p className="text-2xl font-black text-gray-900">{product.pricePerKg} ETH</p>
         </div>
-        <Link href={`/verify?batchId=${product.id}`}>
+        <Link href={`/batch/${product.id}`}>
           <Button className="rounded-full w-12 h-12 p-0 bg-gray-900 hover:bg-primary text-white shadow-lg hover:shadow-primary/30 transition-all duration-300">
             <ArrowRight className="h-5 w-5" />
           </Button>
@@ -91,32 +92,46 @@ export default function MarketplacePage() {
   const [currentPage, setCurrentPage] = useState(1);
   const itemsPerPage = 6;
 
-  const { contract, isConnected } = useWallet();
+  const { contract: walletContract, isConnected } = useWallet();
   const [batches, setBatches] = useState<CustomerHarvestBatch[]>([]);
   const [loading, setLoading] = useState(false);
 
   useEffect(() => {
-    if (isConnected && contract) {
-      fetchBatches();
-    } else {
-      setBatches([]);
-    }
-  }, [isConnected, contract]);
+    fetchBatches();
+  }, [walletContract]); // Re-fetch if wallet contract becomes available, but also run on mount
 
   const fetchBatches = async () => {
-    if (!contract) return;
     setLoading(true);
+    let contractToUse = walletContract;
+
+    // Logic: If wallet is not connected, try to use window.ethereum as read-only provider
+    // If window.ethereum is not available, we can't fetch (unless we used a public RPC, but staying within user constraints)
+
+    if (!contractToUse && typeof window !== 'undefined' && window.ethereum) {
+      try {
+        const provider = new ethers.BrowserProvider(window.ethereum);
+        contractToUse = new ethers.Contract(CONTRACT_ADDRESS, CONTRACT_ABI, provider);
+      } catch (e) {
+        console.error("Failed to create read-only provider", e);
+      }
+    }
+
+    if (!contractToUse) {
+      setLoading(false);
+      return;
+    }
+
     try {
-      const count = await contract.batchCount();
+      const count = await contractToUse.batchCount();
       const fetchedBatches: CustomerHarvestBatch[] = [];
 
       for (let i = Number(count); i >= 1; i--) {
-        const batch = await contract.batches(i);
+        const batch = await contractToUse.batches(i);
         if (!batch.sold) {
           const priceWei = batch.pricePerKgWei || batch.pricePerKg || 0;
           fetchedBatches.push({
             id: i.toString(),
-            name: 'Nagpur Mandarin', // Default name
+            name: 'Nagpur Mandarin',
             location: 'Nagpur, IN',
             quantity: Number(batch.quantity),
             harvestDate: new Date(Number(batch.harvestDate) * 1000),

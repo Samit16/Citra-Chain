@@ -9,7 +9,7 @@ import { useEffect, useState } from 'react';
 import { ethers } from 'ethers';
 
 export default function WalletPage() {
-    const { account, provider } = useWallet();
+    const { account, provider, disconnectWallet } = useWallet();
     const [balance, setBalance] = useState<string>('0');
 
     useEffect(() => {
@@ -65,7 +65,7 @@ export default function WalletPage() {
                                         </p>
                                     </div>
                                 </div>
-                                <Button variant="outline" className="w-full border-gray-200">
+                                <Button variant="outline" className="w-full border-gray-200" onClick={disconnectWallet}>
                                     Disconnect
                                 </Button>
                             </CardContent>
