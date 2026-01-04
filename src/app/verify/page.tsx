@@ -17,7 +17,8 @@ type BatchDetails = {
     id: string;
     farmer: string;
     quantity: number;
-    pricePerKg: number;
+    pricePerKgWei: bigint;
+    pricePerKgEth: string;
     harvestDate: Date;
     sold: boolean;
 };
@@ -44,11 +45,15 @@ export default function VerifyPage() {
         try {
             // batches(id) => [farmer, quantity, price, date, sold]
             const data = await contract.batches(batchId);
+
+            const priceWei = data.pricePerKgWei || data.pricePerKg || BigInt(0);
+
             setBatch({
                 id: batchId,
                 farmer: data.farmer,
                 quantity: Number(data.quantity),
-                pricePerKg: Number(data.pricePerKg),
+                pricePerKgWei: BigInt(priceWei),
+                pricePerKgEth: ethers.formatEther(priceWei),
                 harvestDate: new Date(Number(data.harvestDate) * 1000),
                 sold: data.sold
             });
@@ -68,7 +73,8 @@ export default function VerifyPage() {
         if (!contract || !batch) return;
         setPurchasing(true);
         try {
-            const totalPrice = BigInt(batch.quantity) * BigInt(batch.pricePerKg);
+            // Calculate total price in Wei
+            const totalPrice = BigInt(batch.quantity) * batch.pricePerKgWei;
 
             const tx = await contract.buyBatch(batch.id, {
                 value: totalPrice
@@ -90,7 +96,7 @@ export default function VerifyPage() {
             console.error("Purchase error:", error);
             toast({
                 title: "Purchase Failed",
-                description: error.reason || "Transaction failed",
+                description: error.reason || error.message || "Transaction failed",
                 variant: "destructive"
             });
         } finally {
@@ -166,8 +172,8 @@ export default function VerifyPage() {
                                     <div>
                                         <p className="text-sm font-semibold text-gray-500 uppercase tracking-wider">Total Price</p>
                                         <div className="text-4xl font-black text-primary">
-                                            ETH {ethers.formatEther(BigInt(batch.quantity) * BigInt(batch.pricePerKg))}
-                                            <span className="text-lg text-gray-400 font-normal ml-2">(@ {batch.pricePerKg} wei/kg)</span>
+                                            {parseFloat(ethers.formatEther(BigInt(batch.quantity) * batch.pricePerKgWei)).toFixed(4)} ETH
+                                            <span className="text-lg text-gray-400 font-normal ml-2">(@ {batch.pricePerKgEth} ETH/kg)</span>
                                         </div>
                                     </div>
                                     {batch.sold ? (

@@ -1,4 +1,5 @@
 'use client';
+import { ethers } from 'ethers';
 import { useForm, Controller } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import * as z from 'zod';
@@ -66,11 +67,18 @@ export function NewHarvest({ onRefresh }: NewHarvestProps) {
 
     setLoading(true);
     try {
-      // Contract: createBatch(quantity, pricePerKg, harvestDate)
-      // Dates in solidity are timestamps (seconds)
+      // Contract expects price in Wei. Input is in ETH (or base unit).
+      const priceInWei = ethers.parseEther(values.pricePerKg.toString());
+
+      console.log("Creating batch with:", {
+        quantity: values.quantity,
+        priceWei: priceInWei.toString(),
+        date: Math.floor(values.harvestDate.getTime() / 1000)
+      });
+
       const tx = await contract.createBatch(
         values.quantity,
-        values.pricePerKg,
+        priceInWei,
         Math.floor(values.harvestDate.getTime() / 1000)
       );
 
@@ -89,7 +97,7 @@ export function NewHarvest({ onRefresh }: NewHarvestProps) {
       reset();
       onRefresh();
     } catch (error: any) {
-      console.error(error);
+      console.error("Transaction Error:", error);
       toast({
         title: "Error",
         description: error.reason || error.message || "Failed to create batch",
@@ -151,7 +159,7 @@ export function NewHarvest({ onRefresh }: NewHarvestProps) {
                 </div>
                 <div>
                   <label htmlFor="pricePerKg" className="text-sm font-medium text-gray-500">
-                    Price per Kg (₹)
+                    Price per Kg (ETH)
                   </label>
                   <div className="relative mt-1">
                     <BadgeIndianRupee className="absolute left-3 top-1/2 -translate-y-1/2 h-5 w-5 text-gray-400" />

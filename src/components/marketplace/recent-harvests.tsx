@@ -109,7 +109,7 @@ export function RecentHarvests({ batches }: RecentHarvestsProps) {
                   <div>
                     <p className="text-xs text-gray-500">TOTAL REVENUE</p>
                     <p className="text-green-600 font-bold text-lg">
-                      ₹{(batch.quantity * (batch.pricePerKg || 0)).toLocaleString()}
+                      {Number((batch.quantity * (batch.pricePerKg || 0)).toFixed(4))} ETH
                     </p>
                   </div>
                 </div>
@@ -117,7 +117,7 @@ export function RecentHarvests({ batches }: RecentHarvestsProps) {
                 <div className="flex justify-between items-center">
                   <div>
                     <p className="text-xs text-gray-500">Listing Price</p>
-                    <p className="font-semibold text-xl">₹{batch.pricePerKg}/kg</p>
+                    <p className="font-semibold text-xl">{batch.pricePerKg} ETH/kg</p>
                   </div>
                   <Badge variant="secondary" className="bg-orange-50 text-orange-700 hover:bg-orange-100">
                     Active Listing

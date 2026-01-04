@@ -20,6 +20,7 @@ import { format } from 'date-fns';
 
 import { useWallet } from '@/context/WalletContext';
 import { useEffect } from 'react';
+import { ethers } from 'ethers';
 
 const ProductCard = ({ product }: { product: CustomerHarvestBatch }) => (
   <Card className="group relative overflow-hidden rounded-3xl border-none bg-white/70 shadow-sm hover:shadow-xl hover:bg-white transition-all duration-300 backdrop-blur-sm">
@@ -72,7 +73,7 @@ const ProductCard = ({ product }: { product: CustomerHarvestBatch }) => (
       <div className="flex items-end justify-between pt-4 border-t border-gray-100/50">
         <div>
           <p className="text-xs text-gray-400 font-medium mb-0.5">Price per kg</p>
-          <p className="text-2xl font-black text-gray-900">₹{product.pricePerKg}</p>
+          <p className="text-2xl font-black text-gray-900">{product.pricePerKg} ETH</p>
         </div>
         <Link href={`/verify?batchId=${product.id}`}>
           <Button className="rounded-full w-12 h-12 p-0 bg-gray-900 hover:bg-primary text-white shadow-lg hover:shadow-primary/30 transition-all duration-300">
@@ -112,6 +113,7 @@ export default function MarketplacePage() {
       for (let i = Number(count); i >= 1; i--) {
         const batch = await contract.batches(i);
         if (!batch.sold) {
+          const priceWei = batch.pricePerKgWei || batch.pricePerKg || 0;
           fetchedBatches.push({
             id: i.toString(),
             name: 'Nagpur Mandarin', // Default name
@@ -124,7 +126,7 @@ export default function MarketplacePage() {
               src: `https://picsum.photos/seed/${i}/600/400`,
               hint: 'fresh orange harvest'
             },
-            pricePerKg: Number(batch.pricePerKg)
+            pricePerKg: Number(ethers.formatEther(priceWei))
           });
         }
       }
@@ -170,7 +172,7 @@ export default function MarketplacePage() {
             <div className="w-px h-8 bg-gray-200"></div>
             <div className="text-right">
               <p className="text-xs font-medium text-gray-400 uppercase tracking-widest">Market Index</p>
-              <p className="text-xl font-bold text-primary">₹24.50</p>
+              <p className="text-xl font-bold text-primary">0.001 ETH</p>
             </div>
           </div>
         </div>

@@ -2,6 +2,7 @@
 
 import { useState, useEffect } from 'react';
 import { useWallet } from '@/context/WalletContext';
+import { ethers } from 'ethers';
 import { RecentHarvests } from '@/components/marketplace/recent-harvests';
 import { NewHarvest } from '@/components/marketplace/new-harvest';
 import { mockBatches } from '@/lib/mock-data';
@@ -31,22 +32,29 @@ export default function Home() {
       // Iterate backwards to show newest first
       for (let i = Number(count); i >= 1; i--) {
         const batch = await contract.batches(i);
-        // batch structure: [farmer, quantity, pricePerKg, harvestDate, sold]
+        // batch structure in result object depends on ABI names. 
+        // User provided ABI has `pricePerKgWei`. 
+        // Note: quantities in Solidity are BigInt.
 
         // Filter: show only batches created by connected farmer
         if (batch.farmer.toLowerCase() === account.toLowerCase()) {
+          // Check if ABI uses pricePerKgWei or pricePerKg
+          const priceWei = batch.pricePerKgWei || batch.pricePerKg || 0;
+
           fetchedBatches.push({
             id: i.toString(),
-            cropType: 'Nagpur Orange', // Contract doesn't store this, hardcode for now or metadata
+            cropType: 'Nagpur Orange',
             quantity: Number(batch.quantity),
             harvestDate: new Date(Number(batch.harvestDate) * 1000),
-            farmLocation: 'Nagpur', // Not in contract
+            farmLocation: 'Nagpur',
             status: batch.sold ? 'Sold' : 'Listed',
             image: {
               src: `https://picsum.photos/seed/${i}/600/400`,
               hint: 'fresh orange harvest'
             },
-            pricePerKg: Number(batch.pricePerKg),
+            // Format Wei to Ether for UI display (e.g. "0.01")
+            pricePerKg: Number(ethers.formatEther(priceWei)),
+            // Store original Wei if needed, but UI uses pricePerKg
             blockchainTransaction: 'Verified'
           });
         }
