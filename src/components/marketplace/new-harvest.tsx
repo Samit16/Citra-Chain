@@ -10,17 +10,21 @@ import {
   Target,
   Check,
   Scale,
+  BadgeIndianRupee, // Added this import based on the JSX usage
 } from 'lucide-react';
-import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
-import { Card, CardContent } from '@/components/ui/card';
-import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
-import { Calendar as CalendarComponent } from '@/components/ui/calendar';
-import { cn } from '@/lib/utils';
-import { format } from 'date-fns';
-import type { HarvestBatch } from '@/lib/types';
+import { useWallet } from '@/context/WalletContext';
+import { useToast } from '@/hooks/use-toast';
+import { Loader2 } from 'lucide-react';
+import { useState } from 'react';
 
-import { BadgeIndianRupee } from 'lucide-react';
+// ... other imports ...
+import { Button } from '@/components/ui/button'; // Assuming these are needed based on JSX
+import { Card, CardContent } from '@/components/ui/card'; // Assuming these are needed based on JSX
+import { Input } from '@/components/ui/input'; // Assuming these are needed based on JSX
+import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover'; // Assuming these are needed based on JSX
+import { Calendar as CalendarComponent } from '@/components/ui/calendar'; // Assuming this is needed based on JSX
+import { cn } from '@/lib/utils'; // Assuming this is needed for cn utility
+import { format } from 'date-fns'; // Assuming this is needed for date formatting
 
 const formSchema = z.object({
   cropType: z.string().min(1, 'Crop type is required'),
@@ -31,10 +35,14 @@ const formSchema = z.object({
 });
 
 type NewHarvestProps = {
-  onBatchAdd: (newBatch: Omit<HarvestBatch, 'id' | 'status' | 'finalPrice' | 'image' | 'blockchainTransaction'>) => void;
+  onRefresh: () => void;
 };
 
-export function NewHarvest({ onBatchAdd }: NewHarvestProps) {
+export function NewHarvest({ onRefresh }: NewHarvestProps) {
+  const { contract, isConnected } = useWallet();
+  const { toast } = useToast();
+  const [loading, setLoading] = useState(false);
+
   const { control, handleSubmit, reset } = useForm<z.infer<typeof formSchema>>({
     resolver: zodResolver(formSchema),
     defaultValues: {
@@ -46,9 +54,50 @@ export function NewHarvest({ onBatchAdd }: NewHarvestProps) {
     },
   });
 
-  const onSubmit = (values: z.infer<typeof formSchema>) => {
-    onBatchAdd(values);
-    reset();
+  const onSubmit = async (values: z.infer<typeof formSchema>) => {
+    if (!isConnected || !contract) {
+      toast({
+        title: "Wallet not connected",
+        description: "Please connect your wallet to register a batch.",
+        variant: "destructive"
+      });
+      return;
+    }
+
+    setLoading(true);
+    try {
+      // Contract: createBatch(quantity, pricePerKg, harvestDate)
+      // Dates in solidity are timestamps (seconds)
+      const tx = await contract.createBatch(
+        values.quantity,
+        values.pricePerKg,
+        Math.floor(values.harvestDate.getTime() / 1000)
+      );
+
+      toast({
+        title: "Transaction Sent",
+        description: "Waiting for confirmation...",
+      });
+
+      await tx.wait();
+
+      toast({
+        title: "Batch Registered",
+        description: "Your harvest has been recorded on the blockchain.",
+      });
+
+      reset();
+      onRefresh();
+    } catch (error: any) {
+      console.error(error);
+      toast({
+        title: "Error",
+        description: error.reason || error.message || "Failed to create batch",
+        variant: "destructive"
+      });
+    } finally {
+      setLoading(false);
+    }
   };
 
   return (
@@ -164,9 +213,13 @@ export function NewHarvest({ onBatchAdd }: NewHarvestProps) {
               </div>
               <div className="flex items-center justify-between pt-4">
                 <p className="text-sm text-gray-500">All data is recorded immutably.</p>
-                <Button type="submit" className="bg-primary text-white rounded-lg h-12 px-8 font-bold hover:bg-primary/90">
-                  <Plus className="mr-2 h-5 w-5" />
-                  Register Batch
+                <Button
+                  type="submit"
+                  disabled={loading || !isConnected}
+                  className="bg-primary text-white rounded-lg h-12 px-8 font-bold hover:bg-primary/90 disabled:opacity-50"
+                >
+                  {loading ? <Loader2 className="mr-2 h-5 w-5 animate-spin" /> : <Plus className="mr-2 h-5 w-5" />}
+                  {loading ? 'Registering...' : 'Register Batch'}
                 </Button>
               </div>
             </form>

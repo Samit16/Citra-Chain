@@ -52,9 +52,12 @@ const NavLink = ({
 };
 
 
+import { useWallet } from '@/context/WalletContext';
+
 export function Header() {
   const pathname = usePathname();
   const isMarketplace = pathname === '/marketplace';
+  const { account, connectWallet, isConnected } = useWallet();
 
   return (
     <header className="sticky top-0 z-50 w-full border-b border-border/40 bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
@@ -87,10 +90,11 @@ export function Header() {
           )}
           <Button
             variant="default"
+            onClick={connectWallet}
             className="rounded-full bg-gradient-to-r from-primary to-orange-600 px-6 text-white shadow-md hover:shadow-lg transition-all"
           >
             <Wallet className="mr-2 h-4 w-4" />
-            Connect Wallet
+            {isConnected ? `${account?.substring(0, 6)}...${account?.substring(38)}` : 'Connect Wallet'}
           </Button>
           <Avatar className="h-9 w-9 border-2 border-white shadow-sm cursor-pointer">
             <AvatarImage src="https://picsum.photos/seed/avatar/40/40" />

@@ -18,6 +18,9 @@ import { customerMockBatches, mockTags } from '@/lib/mock-data';
 import type { CustomerHarvestBatch } from '@/lib/types';
 import { format } from 'date-fns';
 
+import { useWallet } from '@/context/WalletContext';
+import { useEffect } from 'react';
+
 const ProductCard = ({ product }: { product: CustomerHarvestBatch }) => (
   <Card className="group relative overflow-hidden rounded-3xl border-none bg-white/70 shadow-sm hover:shadow-xl hover:bg-white transition-all duration-300 backdrop-blur-sm">
     <div className="relative h-56 overflow-hidden">
@@ -71,9 +74,11 @@ const ProductCard = ({ product }: { product: CustomerHarvestBatch }) => (
           <p className="text-xs text-gray-400 font-medium mb-0.5">Price per kg</p>
           <p className="text-2xl font-black text-gray-900">₹{product.pricePerKg}</p>
         </div>
-        <Button className="rounded-full w-12 h-12 p-0 bg-gray-900 hover:bg-primary text-white shadow-lg hover:shadow-primary/30 transition-all duration-300">
-          <ArrowRight className="h-5 w-5" />
-        </Button>
+        <Link href={`/verify?batchId=${product.id}`}>
+          <Button className="rounded-full w-12 h-12 p-0 bg-gray-900 hover:bg-primary text-white shadow-lg hover:shadow-primary/30 transition-all duration-300">
+            <ArrowRight className="h-5 w-5" />
+          </Button>
+        </Link>
       </div>
     </CardContent>
   </Card>
@@ -85,13 +90,59 @@ export default function MarketplacePage() {
   const [currentPage, setCurrentPage] = useState(1);
   const itemsPerPage = 6;
 
+  const { contract, isConnected } = useWallet();
+  const [batches, setBatches] = useState<CustomerHarvestBatch[]>([]);
+  const [loading, setLoading] = useState(false);
+
+  useEffect(() => {
+    if (isConnected && contract) {
+      fetchBatches();
+    } else {
+      setBatches([]);
+    }
+  }, [isConnected, contract]);
+
+  const fetchBatches = async () => {
+    if (!contract) return;
+    setLoading(true);
+    try {
+      const count = await contract.batchCount();
+      const fetchedBatches: CustomerHarvestBatch[] = [];
+
+      for (let i = Number(count); i >= 1; i--) {
+        const batch = await contract.batches(i);
+        if (!batch.sold) {
+          fetchedBatches.push({
+            id: i.toString(),
+            name: 'Nagpur Mandarin', // Default name
+            location: 'Nagpur, IN',
+            quantity: Number(batch.quantity),
+            harvestDate: new Date(Number(batch.harvestDate) * 1000),
+            verified: true,
+            grade: { name: 'Grade A', color: 'bg-green-100 text-green-700' },
+            image: {
+              src: `https://picsum.photos/seed/${i}/600/400`,
+              hint: 'fresh orange harvest'
+            },
+            pricePerKg: Number(batch.pricePerKg)
+          });
+        }
+      }
+      setBatches(fetchedBatches);
+    } catch (e) {
+      console.error("Error fetching marketplace batches", e);
+    } finally {
+      setLoading(false);
+    }
+  };
+
   const toggleFilter = (tag: string) => {
     setActiveFilters((prev) =>
       prev.includes(tag) ? prev.filter((t) => t !== tag) : [...prev, tag]
     );
   };
 
-  const paginatedBatches = customerMockBatches.slice(
+  const paginatedBatches = batches.slice(
     (currentPage - 1) * itemsPerPage,
     currentPage * itemsPerPage
   );
@@ -169,11 +220,20 @@ export default function MarketplacePage() {
           </div>
         </div>
 
-        <div className="grid grid-cols-1 gap-6 md:grid-cols-2 lg:grid-cols-3">
-          {paginatedBatches.map((product) => (
-            <ProductCard key={product.id} product={product} />
-          ))}
-        </div>
+        {loading ? (
+          <div className="flex justify-center p-20 text-xl font-medium text-gray-400">Loading live batches...</div>
+        ) : batches.length === 0 ? (
+          <div className="flex flex-col items-center justify-center p-20 text-gray-400">
+            <p className="text-lg">No active batches available.</p>
+            {!isConnected && <p className="text-sm mt-2">Connect wallet to view verified listings.</p>}
+          </div>
+        ) : (
+          <div className="grid grid-cols-1 gap-6 md:grid-cols-2 lg:grid-cols-3">
+            {paginatedBatches.map((product) => (
+              <ProductCard key={product.id} product={product} />
+            ))}
+          </div>
+        )}
 
         <div className="mt-12 flex items-center justify-center gap-2">
           <Button
@@ -185,24 +245,13 @@ export default function MarketplacePage() {
           >
             <ArrowLeft className="h-4 w-4" />
           </Button>
-          {[1, 2, 3].map((page) => (
-            <Button
-              key={page}
-              variant={currentPage === page ? 'default' : 'ghost'}
-              size="icon"
-              onClick={() => setCurrentPage(page)}
-              className="rounded-full"
-            >
-              {page}
-            </Button>
-          ))}
-          <span className="text-gray-500">...</span>
+          <span className="text-sm font-medium">Page {currentPage}</span>
           <Button
             variant="outline"
             size="icon"
             onClick={() => setCurrentPage((p) => p + 1)}
             disabled={
-              currentPage * itemsPerPage >= customerMockBatches.length
+              currentPage * itemsPerPage >= batches.length
             }
             className="rounded-full"
           >
@@ -210,7 +259,7 @@ export default function MarketplacePage() {
           </Button>
         </div>
       </main>
-      <footer className="bg-[#FFFBF5] text-sm text-gray-500">
+      <footer className="bg-background text-sm text-gray-500">
         <div className="container mx-auto flex flex-wrap items-center justify-between gap-4 px-4 py-8">
           <div className="flex items-center gap-2">
             <span>© 2024 Nagpur Buyer Marketplace.</span>

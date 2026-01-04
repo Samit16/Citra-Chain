@@ -2,11 +2,11 @@
 
 import {
   ArrowRight,
-  CircleDollarSign,
   CheckCircle2,
   List,
   Tag,
-  Gavel
+  QrCode,
+  ExternalLink
 } from 'lucide-react';
 import type { HarvestBatch } from '@/lib/types';
 import { Button } from '@/components/ui/button';
@@ -14,6 +14,15 @@ import { Card, CardContent } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { format } from 'date-fns';
 import Image from 'next/image';
+import { QRCodeSVG } from 'qrcode.react';
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+} from '@/components/ui/dialog';
+import { useState } from 'react';
+import Link from 'next/link';
 
 type RecentHarvestsProps = {
   batches: HarvestBatch[];
@@ -21,7 +30,6 @@ type RecentHarvestsProps = {
 
 const StatusBadge = ({ status }: { status: HarvestBatch['status'] }) => {
   const isSold = status === 'Sold';
-  const isListed = status === 'Listed';
 
   return (
     <Badge
@@ -40,6 +48,8 @@ const StatusBadge = ({ status }: { status: HarvestBatch['status'] }) => {
 };
 
 export function RecentHarvests({ batches }: RecentHarvestsProps) {
+  const [selectedBatch, setSelectedBatch] = useState<HarvestBatch | null>(null);
+
   return (
     <section>
       <div className="flex items-center justify-between mb-6">
@@ -56,20 +66,27 @@ export function RecentHarvests({ batches }: RecentHarvestsProps) {
 
       <div className="grid gap-8 md:grid-cols-2 lg:grid-cols-3">
         {batches.map((batch) => (
-          <Card key={batch.id} className="overflow-hidden rounded-2xl shadow-lg border-none bg-card">
+          <Card key={batch.id} className="overflow-hidden rounded-2xl shadow-lg border-none bg-card group">
             <div className="relative">
               <Image
                 src={batch.image.src}
                 alt={batch.cropType}
                 width={600}
                 height={400}
-                className="h-48 w-full object-cover"
+                className="h-48 w-full object-cover transition-transform duration-500 group-hover:scale-105"
                 data-ai-hint={batch.image.hint}
               />
               <StatusBadge status={batch.status} />
-              <div className="absolute bottom-4 left-4 bg-black/50 text-white text-xs font-mono rounded-md px-2 py-1">
-                BATCH ID {batch.id}
+              <div className="absolute bottom-4 left-4 bg-black/50 text-white text-xs font-mono rounded-md px-2 py-1 backdrop-blur-sm">
+                ID: {batch.id}
               </div>
+              <Button
+                size="icon"
+                className="absolute bottom-4 right-4 bg-white/90 text-gray-900 hover:bg-white shadow-lg rounded-full"
+                onClick={() => setSelectedBatch(batch)}
+              >
+                <QrCode className="h-5 w-5" />
+              </Button>
             </div>
             <CardContent className="p-6">
               <div className="flex justify-between items-center mb-4">
@@ -87,12 +104,12 @@ export function RecentHarvests({ batches }: RecentHarvestsProps) {
                 <div className="flex justify-between items-center">
                   <div className="flex items-center gap-2 text-green-600 font-semibold">
                     <CheckCircle2 className="h-5 w-5" />
-                    Completed
+                    Sold
                   </div>
                   <div>
-                    <p className="text-xs text-gray-500">FINAL PRICE</p>
+                    <p className="text-xs text-gray-500">TOTAL REVENUE</p>
                     <p className="text-green-600 font-bold text-lg">
-                      ₹{batch.finalPrice?.toLocaleString()}
+                      ₹{(batch.quantity * (batch.pricePerKg || 0)).toLocaleString()}
                     </p>
                   </div>
                 </div>
@@ -102,18 +119,45 @@ export function RecentHarvests({ batches }: RecentHarvestsProps) {
                     <p className="text-xs text-gray-500">Listing Price</p>
                     <p className="font-semibold text-xl">₹{batch.pricePerKg}/kg</p>
                   </div>
-                  <Button
-                    variant="outline"
-                    className="rounded-full border-primary text-primary bg-orange-50 font-semibold"
-                  >
-                    Listed for Sale
-                  </Button>
+                  <Badge variant="secondary" className="bg-orange-50 text-orange-700 hover:bg-orange-100">
+                    Active Listing
+                  </Badge>
                 </div>
               )}
             </CardContent>
           </Card>
         ))}
       </div>
+
+      <Dialog open={!!selectedBatch} onOpenChange={(open) => !open && setSelectedBatch(null)}>
+        <DialogContent className="sm:max-w-md">
+          <DialogHeader>
+            <DialogTitle className="text-center">Batch Verification</DialogTitle>
+          </DialogHeader>
+          {selectedBatch && (
+            <div className="flex flex-col items-center space-y-6 py-6">
+              <div className="bg-white p-4 rounded-xl shadow-inner border border-gray-100">
+                <QRCodeSVG
+                  value={`${typeof window !== 'undefined' ? window.location.origin : ''}/verify?batchId=${selectedBatch.id}`}
+                  size={200}
+                  level="H"
+                />
+              </div>
+              <div className="text-center space-y-1">
+                <p className="text-sm font-medium text-gray-500">Scan to verify authenticity</p>
+                <p className="text-xs text-gray-400 font-mono">ID: {selectedBatch.id}</p>
+              </div>
+              <div className="flex gap-2 w-full">
+                <Link href={`/verify?batchId=${selectedBatch.id}`} className="w-full">
+                  <Button className="w-full" variant="outline">
+                    <ExternalLink className="mr-2 h-4 w-4" /> Open Verify Page
+                  </Button>
+                </Link>
+              </div>
+            </div>
+          )}
+        </DialogContent>
+      </Dialog>
     </section>
   );
 }

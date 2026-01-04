@@ -10,6 +10,8 @@ export const metadata: Metadata = {
   description: 'A decentralized marketplace for Nagpur oranges.',
 };
 
+import { WalletProvider } from '@/context/WalletContext';
+
 export default function RootLayout({
   children,
 }: Readonly<{
@@ -18,8 +20,10 @@ export default function RootLayout({
   return (
     <html lang="en" suppressHydrationWarning>
       <body className={`${inter.variable} font-sans antialiased bg-[#FFFBF5]`}>
-        {children}
-        <Toaster />
+        <WalletProvider>
+          {children}
+          <Toaster />
+        </WalletProvider>
       </body>
     </html>
   );

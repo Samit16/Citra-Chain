@@ -1,6 +1,7 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
+import { useWallet } from '@/context/WalletContext';
 import { RecentHarvests } from '@/components/marketplace/recent-harvests';
 import { NewHarvest } from '@/components/marketplace/new-harvest';
 import { mockBatches } from '@/lib/mock-data';
@@ -9,32 +10,53 @@ import { Header } from '@/components/shared/header';
 import { Footer } from '@/components/marketplace/footer';
 
 export default function Home() {
-  const [batches, setBatches] = useState<HarvestBatch[]>(mockBatches);
+  const [batches, setBatches] = useState<HarvestBatch[]>([]);
+  const { contract, account } = useWallet();
+  const [loading, setLoading] = useState(false);
 
-  const handleAddBatch = (
-    newBatch: Omit<
-      HarvestBatch,
-      'id' | 'status' | 'finalPrice' | 'image' | 'blockchainTransaction'
-    >
-  ) => {
-    const newId = `ORG-2023-${Math.floor(Math.random() * 1000 + 8800)}`;
-    setBatches((prevBatches) => [
-      {
-        ...newBatch,
-        id: newId,
-        status: 'Listed',
-        image: {
-          src: `https://picsum.photos/seed/${newId}/600/400`,
-          hint: 'fresh harvest',
-        },
-        blockchainTransaction:
-          '0x' +
-          [...Array(64)]
-            .map(() => Math.floor(Math.random() * 16).toString(16))
-            .join(''),
-      },
-      ...prevBatches,
-    ]);
+  // Initial fetch
+  useEffect(() => {
+    if (contract && account) {
+      fetchBatches();
+    }
+  }, [contract, account]);
+
+  const fetchBatches = async () => {
+    if (!contract || !account) return;
+    setLoading(true);
+    try {
+      const count = await contract.batchCount();
+      const fetchedBatches: HarvestBatch[] = [];
+
+      // Iterate backwards to show newest first
+      for (let i = Number(count); i >= 1; i--) {
+        const batch = await contract.batches(i);
+        // batch structure: [farmer, quantity, pricePerKg, harvestDate, sold]
+
+        // Filter: show only batches created by connected farmer
+        if (batch.farmer.toLowerCase() === account.toLowerCase()) {
+          fetchedBatches.push({
+            id: i.toString(),
+            cropType: 'Nagpur Orange', // Contract doesn't store this, hardcode for now or metadata
+            quantity: Number(batch.quantity),
+            harvestDate: new Date(Number(batch.harvestDate) * 1000),
+            farmLocation: 'Nagpur', // Not in contract
+            status: batch.sold ? 'Sold' : 'Listed',
+            image: {
+              src: `https://picsum.photos/seed/${i}/600/400`,
+              hint: 'fresh orange harvest'
+            },
+            pricePerKg: Number(batch.pricePerKg),
+            blockchainTransaction: 'Verified'
+          });
+        }
+      }
+      setBatches(fetchedBatches);
+    } catch (error) {
+      console.error("Error fetching batches:", error);
+    } finally {
+      setLoading(false);
+    }
   };
 
   return (
@@ -47,8 +69,12 @@ export default function Home() {
         <p className="text-gray-500 mb-8">
           Manage your harvests and track your sales on the marketplace.
         </p>
-        <NewHarvest onBatchAdd={handleAddBatch} />
-        <RecentHarvests batches={batches} />
+        <NewHarvest onRefresh={fetchBatches} />
+        {loading ? (
+          <div className="flex justify-center p-8">Loading blockchain data...</div>
+        ) : (
+          <RecentHarvests batches={batches} />
+        )}
       </main>
       <Footer />
     </div>
