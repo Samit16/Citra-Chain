@@ -20,15 +20,18 @@ import { cn } from '@/lib/utils';
 import { format } from 'date-fns';
 import type { HarvestBatch } from '@/lib/types';
 
+import { BadgeIndianRupee } from 'lucide-react';
+
 const formSchema = z.object({
   cropType: z.string().min(1, 'Crop type is required'),
   quantity: z.coerce.number().positive(),
   harvestDate: z.date(),
   farmLocation: z.string().min(1, 'Farm location is required'),
+  pricePerKg: z.coerce.number().positive('Price must be greater than 0'),
 });
 
 type NewHarvestProps = {
-  onBatchAdd: (newBatch: Omit<HarvestBatch, 'id'|'status'|'bids'|'finalPrice'>) => void;
+  onBatchAdd: (newBatch: Omit<HarvestBatch, 'id' | 'status' | 'finalPrice' | 'image' | 'blockchainTransaction'>) => void;
 };
 
 export function NewHarvest({ onBatchAdd }: NewHarvestProps) {
@@ -39,6 +42,7 @@ export function NewHarvest({ onBatchAdd }: NewHarvestProps) {
       quantity: 1000,
       harvestDate: new Date(),
       farmLocation: '',
+      pricePerKg: 0,
     },
   });
 
@@ -48,14 +52,14 @@ export function NewHarvest({ onBatchAdd }: NewHarvestProps) {
   };
 
   return (
-    <Card className="overflow-hidden border-none shadow-lg bg-white rounded-2xl mb-12">
+    <Card className="overflow-hidden border-none shadow-lg bg-card rounded-2xl mb-12">
       <CardContent className="p-0">
         <div className="grid md:grid-cols-3">
-          <div className="md:col-span-1 bg-[#FFF5E5] p-8 flex flex-col justify-center">
+          <div className="md:col-span-1 bg-primary/10 p-8 flex flex-col justify-center">
             <div className="w-12 h-12 bg-white rounded-full flex items-center justify-center mb-4">
               <Plus className="text-primary" />
             </div>
-            <h2 className="text-3xl font-bold mb-2 text-[#3D3D3D]">New Harvest</h2>
+            <h2 className="text-3xl font-bold mb-2 text-foreground">New Harvest</h2>
             <p className="text-gray-500 mb-6">
               Register your latest batch on the blockchain. Ensure data accuracy for better trust score.
             </p>
@@ -86,12 +90,27 @@ export function NewHarvest({ onBatchAdd }: NewHarvestProps) {
                     Quantity (kg)
                   </label>
                   <div className="relative mt-1">
-                     <Scale className="absolute left-3 top-1/2 -translate-y-1/2 h-5 w-5 text-gray-400" />
+                    <Scale className="absolute left-3 top-1/2 -translate-y-1/2 h-5 w-5 text-gray-400" />
                     <Controller
                       name="quantity"
                       control={control}
                       render={({ field }) => (
-                        <Input id="quantity" type="number" placeholder="e.g. 1000" {...field} className="pl-10 bg-[#F9F9F9] border-[#E0E0E0] rounded-lg h-12"/>
+                        <Input id="quantity" type="number" placeholder="e.g. 1000" {...field} className="pl-10 bg-[#F9F9F9] border-[#E0E0E0] rounded-lg h-12" />
+                      )}
+                    />
+                  </div>
+                </div>
+                <div>
+                  <label htmlFor="pricePerKg" className="text-sm font-medium text-gray-500">
+                    Price per Kg (₹)
+                  </label>
+                  <div className="relative mt-1">
+                    <BadgeIndianRupee className="absolute left-3 top-1/2 -translate-y-1/2 h-5 w-5 text-gray-400" />
+                    <Controller
+                      name="pricePerKg"
+                      control={control}
+                      render={({ field }) => (
+                        <Input id="pricePerKg" type="number" placeholder="e.g. 40" {...field} className="pl-10 bg-[#F9F9F9] border-[#E0E0E0] rounded-lg h-12" />
                       )}
                     />
                   </div>
@@ -136,7 +155,7 @@ export function NewHarvest({ onBatchAdd }: NewHarvestProps) {
                       name="farmLocation"
                       control={control}
                       render={({ field }) => (
-                        <Input id="farmLocation" placeholder="Select area" {...field} className="pl-10 bg-[#F9F9F9] border-[#E0E0E0] rounded-lg h-12"/>
+                        <Input id="farmLocation" placeholder="Select area" {...field} className="pl-10 bg-[#F9F9F9] border-[#E0E0E0] rounded-lg h-12" />
                       )}
                     />
                     <Target className="absolute right-3 top-1/2 -translate-y-1/2 h-5 w-5 text-primary" />
@@ -144,7 +163,7 @@ export function NewHarvest({ onBatchAdd }: NewHarvestProps) {
                 </div>
               </div>
               <div className="flex items-center justify-between pt-4">
-                 <p className="text-sm text-gray-500">All data is recorded immutably.</p>
+                <p className="text-sm text-gray-500">All data is recorded immutably.</p>
                 <Button type="submit" className="bg-primary text-white rounded-lg h-12 px-8 font-bold hover:bg-primary/90">
                   <Plus className="mr-2 h-5 w-5" />
                   Register Batch

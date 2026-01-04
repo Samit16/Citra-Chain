@@ -40,10 +40,10 @@ const NavLink = ({
     <Link
       href={href}
       className={cn(
-        'rounded-full px-4 py-2 text-sm font-medium transition-colors',
+        'text-sm font-medium transition-colors hover:text-primary',
         isActive
-          ? 'bg-stone-200/50 text-stone-900'
-          : 'text-stone-600 hover:bg-stone-200/50'
+          ? 'text-primary font-bold'
+          : 'text-stone-600'
       )}
     >
       {children}
@@ -51,46 +51,48 @@ const NavLink = ({
   );
 };
 
+
 export function Header() {
   const pathname = usePathname();
   const isMarketplace = pathname === '/marketplace';
 
   return (
     <header className="sticky top-0 z-50 w-full border-b border-border/40 bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
-      <div className="container flex h-16 items-center">
-        <div className="mr-8 flex items-center">
+      <div className="container relative flex h-16 items-center justify-between">
+        <div className="flex items-center gap-2">
           <OrangeIcon />
-          <div className="ml-2">
-            <h1 className="text-md font-bold text-[#1E1E1E]">NagpurMarket</h1>
-            <p className="text-xs text-gray-500 -mt-1">DECENTRALIZED TRADE</p>
+          <div>
+            <h1 className="text-xl font-bold tracking-tight text-[#1E1E1E]">Citra-Chain</h1>
+            <p className="text-[10px] font-medium tracking-wider text-primary/80 -mt-1 uppercase">Decentralized Trade</p>
           </div>
         </div>
-        <nav className="flex items-center gap-2 rounded-full bg-stone-100/80 p-1">
+
+        {/* Centered Navigation */}
+        <nav className="absolute left-1/2 top-1/2 hidden -translate-x-1/2 -translate-y-1/2 transform md:flex items-center gap-8">
           <NavLink href="/">Farmer</NavLink>
           <NavLink href="/marketplace">Marketplace</NavLink>
-          <NavLink href="/my-bids">My Bids</NavLink>
           <NavLink href="/wallet">Wallet</NavLink>
-          <NavLink href="/analytics">Analytics</NavLink>
         </nav>
-        <div className="flex flex-1 items-center justify-end gap-4">
+
+        <div className="flex items-center gap-4">
           {isMarketplace && (
-            <div className="relative w-full max-w-xs">
-              <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-400" />
+            <div className="relative hidden w-64 lg:block">
+              <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
               <input
                 type="text"
                 placeholder="Search crop, location..."
-                className="w-full rounded-full border border-stone-200 bg-stone-100/80 py-2 pl-9 pr-4 text-sm focus:outline-none focus:ring-1 focus:ring-primary"
+                className="w-full rounded-full border border-input bg-muted/50 py-2 pl-9 pr-4 text-sm focus:outline-none focus:ring-1 focus:ring-primary"
               />
             </div>
           )}
           <Button
             variant="default"
-            className="rounded-full bg-primary text-white hover:bg-primary/90"
+            className="rounded-full bg-gradient-to-r from-primary to-orange-600 px-6 text-white shadow-md hover:shadow-lg transition-all"
           >
             <Wallet className="mr-2 h-4 w-4" />
-            Connect
+            Connect Wallet
           </Button>
-          <Avatar className="h-9 w-9">
+          <Avatar className="h-9 w-9 border-2 border-white shadow-sm cursor-pointer">
             <AvatarImage src="https://picsum.photos/seed/avatar/40/40" />
             <AvatarFallback>U</AvatarFallback>
           </Avatar>
@@ -99,3 +101,4 @@ export function Header() {
     </header>
   );
 }
+

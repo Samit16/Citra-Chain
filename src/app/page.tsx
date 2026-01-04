@@ -12,7 +12,10 @@ export default function Home() {
   const [batches, setBatches] = useState<HarvestBatch[]>(mockBatches);
 
   const handleAddBatch = (
-    newBatch: Omit<HarvestBatch, 'id' | 'status' | 'bids' | 'finalPrice'>
+    newBatch: Omit<
+      HarvestBatch,
+      'id' | 'status' | 'finalPrice' | 'image' | 'blockchainTransaction'
+    >
   ) => {
     const newId = `ORG-2023-${Math.floor(Math.random() * 1000 + 8800)}`;
     setBatches((prevBatches) => [
@@ -20,7 +23,10 @@ export default function Home() {
         ...newBatch,
         id: newId,
         status: 'Listed',
-        bids: Math.random() > 0.5 ? Math.floor(Math.random() * 5) + 1 : 0,
+        image: {
+          src: `https://picsum.photos/seed/${newId}/600/400`,
+          hint: 'fresh harvest',
+        },
         blockchainTransaction:
           '0x' +
           [...Array(64)]
@@ -32,10 +38,10 @@ export default function Home() {
   };
 
   return (
-    <div className="flex min-h-screen flex-col bg-[#FFFBF5] text-[#3D3D3D]">
+    <div className="flex min-h-screen flex-col bg-background text-foreground">
       <Header />
       <main className="container mx-auto flex-1 px-4 py-8">
-        <h1 className="text-3xl font-bold text-[#1E1E1E] mb-2">
+        <h1 className="text-3xl font-bold text-foreground mb-2">
           Farmer Dashboard
         </h1>
         <p className="text-gray-500 mb-8">

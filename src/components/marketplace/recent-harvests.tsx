@@ -26,9 +26,8 @@ const StatusBadge = ({ status }: { status: HarvestBatch['status'] }) => {
   return (
     <Badge
       variant="outline"
-      className={`absolute top-4 right-4 rounded-full border-none font-semibold ${
-        isSold ? 'bg-gray-800/70 text-white' : 'bg-green-100 text-green-800'
-      }`}
+      className={`absolute top-4 right-4 rounded-full border-none font-semibold ${isSold ? 'bg-gray-800/70 text-white' : 'bg-green-100 text-green-800'
+        }`}
     >
       {isSold ? (
         <CheckCircle2 className="mr-2 h-4 w-4 text-white" />
@@ -45,7 +44,7 @@ export function RecentHarvests({ batches }: RecentHarvestsProps) {
     <section>
       <div className="flex items-center justify-between mb-6">
         <div>
-          <h2 className="text-3xl font-bold text-[#3D3D3D]">Your Recent Harvests</h2>
+          <h2 className="text-3xl font-bold text-foreground">Your Recent Harvests</h2>
           <p className="text-gray-500">
             Track the status of your produce on the marketplace.
           </p>
@@ -57,7 +56,7 @@ export function RecentHarvests({ batches }: RecentHarvestsProps) {
 
       <div className="grid gap-8 md:grid-cols-2 lg:grid-cols-3">
         {batches.map((batch) => (
-          <Card key={batch.id} className="overflow-hidden rounded-2xl shadow-lg border-none bg-white">
+          <Card key={batch.id} className="overflow-hidden rounded-2xl shadow-lg border-none bg-card">
             <div className="relative">
               <Image
                 src={batch.image.src}
@@ -75,17 +74,17 @@ export function RecentHarvests({ batches }: RecentHarvestsProps) {
             <CardContent className="p-6">
               <div className="flex justify-between items-center mb-4">
                 <div>
-                  <p className="text-sm text-gray-500 flex items-center"><List className="w-4 h-4 mr-2"/>Quantity</p>
+                  <p className="text-sm text-gray-500 flex items-center"><List className="w-4 h-4 mr-2" />Quantity</p>
                   <p className="font-bold text-lg">{batch.quantity.toLocaleString()} kg</p>
                 </div>
                 <div>
-                  <p className="text-sm text-gray-500 flex items-center"><Tag className="w-4 h-4 mr-2"/>Date</p>
+                  <p className="text-sm text-gray-500 flex items-center"><Tag className="w-4 h-4 mr-2" />Date</p>
                   <p className="font-bold text-lg">{format(batch.harvestDate, 'MMM dd')}</p>
                 </div>
               </div>
               <div className="border-t border-dashed border-gray-200 my-4"></div>
               {batch.status === 'Sold' ? (
-                 <div className="flex justify-between items-center">
+                <div className="flex justify-between items-center">
                   <div className="flex items-center gap-2 text-green-600 font-semibold">
                     <CheckCircle2 className="h-5 w-5" />
                     Completed
@@ -97,21 +96,17 @@ export function RecentHarvests({ batches }: RecentHarvestsProps) {
                     </p>
                   </div>
                 </div>
-              ) : batch.bids && batch.bids > 0 ? (
-                <div className="flex justify-between items-center">
-                  <CircleDollarSign className="h-6 w-6 text-primary" />
-                  <Button variant="outline" className="rounded-full border-primary text-primary bg-orange-50 font-semibold">
-                    {batch.bids} Active Bid{batch.bids > 1 ? 's' : ''}
-                  </Button>
-                </div>
               ) : (
                 <div className="flex justify-between items-center">
                   <div>
-                    <p className="text-xs text-gray-500">Minimum Bid</p>
-                    <p className="font-semibold">₹{batch.minBid}/kg</p>
+                    <p className="text-xs text-gray-500">Listing Price</p>
+                    <p className="font-semibold text-xl">₹{batch.pricePerKg}/kg</p>
                   </div>
-                  <Button variant="outline" className="rounded-full border-amber-400 text-amber-600 bg-amber-50 font-semibold">
-                    Awaiting Bids
+                  <Button
+                    variant="outline"
+                    className="rounded-full border-primary text-primary bg-orange-50 font-semibold"
+                  >
+                    Listed for Sale
                   </Button>
                 </div>
               )}

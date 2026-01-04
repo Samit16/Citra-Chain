@@ -9,8 +9,7 @@ export type HarvestBatch = {
     src: string;
     hint: string;
   };
-  bids?: number;
-  minBid?: number;
+  pricePerKg?: number;
   finalPrice?: number;
   blockchainTransaction?: string;
 };
@@ -21,9 +20,8 @@ export type CustomerHarvestBatch = {
   location: string;
   quantity: number;
   harvestDate: Date;
-  highestBid: number;
+  pricePerKg: number;
   verified: boolean;
-  timeLeft?: string;
   grade: {
     name: string;
     color: string;
@@ -35,3 +33,4 @@ export type CustomerHarvestBatch = {
 };
 
 export type Tag = string;
+

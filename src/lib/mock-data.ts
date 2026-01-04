@@ -12,8 +12,7 @@ export const mockBatches: HarvestBatch[] = [
       src: 'https://picsum.photos/seed/fruit1/600/400',
       hint: 'fresh oranges',
     },
-    bids: 0,
-    minBid: 40,
+    pricePerKg: 40,
     blockchainTransaction:
       '0x1a2b3c4d5e6f7a8b9c0d1e2f3a4b5c6d7e8f9a0b1c2d3e4f5a6b7c8d9e0f1a2b',
   },
@@ -43,7 +42,7 @@ export const mockBatches: HarvestBatch[] = [
       src: 'https://picsum.photos/seed/orangehalf/600/400',
       hint: 'orange slice',
     },
-    bids: 1,
+    pricePerKg: 35,
     blockchainTransaction:
       '0x3c4d5e6f7a8b9c0d1e2f3a4b5c6d7e8f9a0b1c2d3e4f5a6b7c8d9e0f1a2b3c4d',
   },
@@ -56,7 +55,7 @@ export const customerMockBatches: CustomerHarvestBatch[] = [
     location: 'Kalmeshwar, Nagpur',
     quantity: 5000,
     harvestDate: new Date('2024-10-24'),
-    highestBid: 25.5,
+    pricePerKg: 25.5,
     verified: true,
     grade: { name: 'Grade A', color: 'bg-amber-100 text-amber-800' },
     image: {
@@ -70,7 +69,7 @@ export const customerMockBatches: CustomerHarvestBatch[] = [
     location: 'Katol, Nagpur',
     quantity: 2500,
     harvestDate: new Date('2024-10-26'),
-    highestBid: 28.0,
+    pricePerKg: 28.0,
     verified: false,
     grade: { name: 'Organic', color: 'bg-green-100 text-green-800' },
     image: {
@@ -84,9 +83,8 @@ export const customerMockBatches: CustomerHarvestBatch[] = [
     location: 'Ramtek, Nagpur',
     quantity: 10000,
     harvestDate: new Date('2024-10-23'),
-    highestBid: 22.1,
+    pricePerKg: 22.1,
     verified: true,
-    timeLeft: '1H LEFT',
     grade: { name: 'Grade B', color: 'bg-blue-100 text-blue-800' },
     image: {
       src: 'https://picsum.photos/seed/orangetree/400/250',
@@ -99,7 +97,7 @@ export const customerMockBatches: CustomerHarvestBatch[] = [
     location: 'Saoner, Nagpur',
     quantity: 1200,
     harvestDate: new Date('2024-10-28'),
-    highestBid: 32.0,
+    pricePerKg: 32.0,
     verified: false,
     grade: { name: 'Premium', color: 'bg-purple-100 text-purple-800' },
     image: {
@@ -113,7 +111,7 @@ export const customerMockBatches: CustomerHarvestBatch[] = [
     location: 'Umred, Nagpur',
     quantity: 8500,
     harvestDate: new Date('2024-10-25'),
-    highestBid: 24.8,
+    pricePerKg: 24.8,
     verified: false,
     grade: { name: 'Grade A', color: 'bg-amber-100 text-amber-800' },
     image: {
@@ -127,7 +125,7 @@ export const customerMockBatches: CustomerHarvestBatch[] = [
     location: 'Kondhali, Nagpur',
     quantity: 15000,
     harvestDate: new Date('2024-10-24'),
-    highestBid: 18.5,
+    pricePerKg: 18.5,
     verified: false,
     grade: { name: 'Grade C', color: 'bg-red-100 text-red-800' },
     image: {
@@ -138,3 +136,4 @@ export const customerMockBatches: CustomerHarvestBatch[] = [
 ];
 
 export const mockTags: Tag[] = ['Nagpur Mandarin', 'Grade A', 'Organic'];
+
