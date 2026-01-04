@@ -12,6 +12,7 @@ export type HarvestBatch = {
   pricePerKg?: number;
   finalPrice?: number;
   blockchainTransaction?: string;
+  isActive?: boolean;
 };
 
 export type CustomerHarvestBatch = {
@@ -30,6 +31,9 @@ export type CustomerHarvestBatch = {
     src: string;
     hint: string;
   };
+  farmer?: string;
+  sold?: boolean;
+  isActive?: boolean;
 };
 
 export type Tag = string;

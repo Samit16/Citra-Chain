@@ -1,4 +1,4 @@
-export const CONTRACT_ADDRESS = "0x41E713Ae601956095c613eDe1b0cce3E025E19ff";
+export const CONTRACT_ADDRESS = "0x6DF059BA891131D1ebf3cb28Ad7268acEAB0B89c";
 
 export const CONTRACT_ABI = [
     {
@@ -40,6 +40,19 @@ export const CONTRACT_ABI = [
                 "internalType": "uint256",
                 "name": "batchId",
                 "type": "uint256"
+            }
+        ],
+        "name": "BatchDeactivated",
+        "type": "event"
+    },
+    {
+        "anonymous": false,
+        "inputs": [
+            {
+                "indexed": false,
+                "internalType": "uint256",
+                "name": "batchId",
+                "type": "uint256"
             },
             {
                 "indexed": false,
@@ -55,6 +68,31 @@ export const CONTRACT_ABI = [
             }
         ],
         "name": "BatchPurchased",
+        "type": "event"
+    },
+    {
+        "anonymous": false,
+        "inputs": [
+            {
+                "indexed": false,
+                "internalType": "uint256",
+                "name": "batchId",
+                "type": "uint256"
+            },
+            {
+                "indexed": false,
+                "internalType": "uint256",
+                "name": "quantity",
+                "type": "uint256"
+            },
+            {
+                "indexed": false,
+                "internalType": "uint256",
+                "name": "pricePerKgWei",
+                "type": "uint256"
+            }
+        ],
+        "name": "BatchUpdated",
         "type": "event"
     },
     {
@@ -89,6 +127,42 @@ export const CONTRACT_ABI = [
             }
         ],
         "name": "createBatch",
+        "outputs": [],
+        "stateMutability": "nonpayable",
+        "type": "function"
+    },
+    {
+        "inputs": [
+            {
+                "internalType": "uint256",
+                "name": "batchId",
+                "type": "uint256"
+            }
+        ],
+        "name": "deactivateBatch",
+        "outputs": [],
+        "stateMutability": "nonpayable",
+        "type": "function"
+    },
+    {
+        "inputs": [
+            {
+                "internalType": "uint256",
+                "name": "batchId",
+                "type": "uint256"
+            },
+            {
+                "internalType": "uint256",
+                "name": "quantity",
+                "type": "uint256"
+            },
+            {
+                "internalType": "uint256",
+                "name": "pricePerKgWei",
+                "type": "uint256"
+            }
+        ],
+        "name": "updateBatch",
         "outputs": [],
         "stateMutability": "nonpayable",
         "type": "function"
@@ -140,10 +214,14 @@ export const CONTRACT_ABI = [
                 "internalType": "bool",
                 "name": "sold",
                 "type": "bool"
+            },
+            {
+                "internalType": "bool",
+                "name": "isActive",
+                "type": "bool"
             }
         ],
         "stateMutability": "view",
         "type": "function"
     }
 ];
-

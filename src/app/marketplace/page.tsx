@@ -14,6 +14,8 @@ import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import Image from 'next/image';
+import { MarketInsights } from '@/components/marketplace/market-insights';
+import { getBatchImage } from '@/lib/image-mapper';
 import { customerMockBatches, mockTags } from '@/lib/mock-data';
 import type { CustomerHarvestBatch } from '@/lib/types';
 import { format } from 'date-fns';
@@ -98,14 +100,11 @@ export default function MarketplacePage() {
 
   useEffect(() => {
     fetchBatches();
-  }, [walletContract]); // Re-fetch if wallet contract becomes available, but also run on mount
+  }, [walletContract]);
 
   const fetchBatches = async () => {
     setLoading(true);
     let contractToUse = walletContract;
-
-    // Logic: If wallet is not connected, try to use window.ethereum as read-only provider
-    // If window.ethereum is not available, we can't fetch (unless we used a public RPC, but staying within user constraints)
 
     if (!contractToUse && typeof window !== 'undefined' && window.ethereum) {
       try {
@@ -127,23 +126,53 @@ export default function MarketplacePage() {
 
       for (let i = Number(count); i >= 1; i--) {
         const batch = await contractToUse.batches(i);
-        if (!batch.sold) {
-          const priceWei = batch.pricePerKgWei || batch.pricePerKg || 0;
-          fetchedBatches.push({
-            id: i.toString(),
-            name: 'Nagpur Mandarin',
-            location: 'Nagpur, IN',
-            quantity: Number(batch.quantity),
-            harvestDate: new Date(Number(batch.harvestDate) * 1000),
-            verified: true,
-            grade: { name: 'Grade A', color: 'bg-green-100 text-green-700' },
-            image: {
-              src: `https://picsum.photos/seed/${i}/600/400`,
-              hint: 'fresh orange harvest'
-            },
-            pricePerKg: Number(ethers.formatEther(priceWei))
-          });
-        }
+        // batch: [farmer, quantity, price, date, sold, isActive]
+        // isActive is likely at index 5 or property 'isActive'
+
+        // We must check if batch.isActive is present. If undefined (old contract), we might default to true/false.
+        // Given new requirements, we only show active.
+        const isActive = batch.isActive !== undefined ? batch.isActive : (batch[5] !== undefined ? batch[5] : true);
+
+        if (!isActive) continue; // Skip deleted items
+
+        // Also note: we need to pass ALL active batches (including sold) to MarketInsights,
+        // but for the LIST below, we probably only want UNSOLD?
+        // Prompt says "Dashboard widgets... Popular Batches... Market Overview: Total batches listed, Total batches sold".
+        // This implies we should fetch everything active, pass to Insights, and then filtering for the GRID display?
+        // Currently the list loop filters `!batch.sold`.
+        // I'll keep filtering active && !sold for the LIST. 
+        // But MarketInsights needs SOLD batches too.
+        // So I should separate the "all active batches" from "available to buy batches".
+
+        // Refactor: We fetch ALL active batches. Then filter for Grid.
+        // Actually, previous code: if (!batch.sold) { push }
+        // I will change to: push ALL active batches. Then let the Grid filter?
+        // Or store separate state?
+        // Simpler: Just fetch all active ones. Render all in Grid? No, usually marketplace grid hides sold items or puts them at end.
+        // I'll fetch ALL active. Grid will show all but maybe badge Sold ones.
+        // Wait, requirement 2: "Popular Batches (Sorted by recent purchases)" implies sold ones should be visible?
+        // Filter: "Batches owned by connected farmer" is for Dashboard.
+        // Marketplace is for "Buying".
+        // I'll fetch all active batches.
+
+        const priceWei = batch.pricePerKgWei || batch.pricePerKg || 0;
+        fetchedBatches.push({
+          id: i.toString(),
+          name: 'Nagpur Mandarin',
+          location: 'Nagpur, IN',
+          quantity: Number(batch.quantity),
+          harvestDate: new Date(Number(batch.harvestDate) * 1000),
+          verified: true,
+          grade: { name: 'Grade A', color: 'bg-green-100 text-green-700' },
+          image: {
+            src: getBatchImage(i),
+            hint: 'fresh orange harvest'
+          },
+          pricePerKg: Number(ethers.formatEther(priceWei)),
+          farmer: batch.farmer,
+          sold: batch.sold,
+          isActive: isActive
+        });
       }
       setBatches(fetchedBatches);
     } catch (e) {
@@ -159,38 +188,29 @@ export default function MarketplacePage() {
     );
   };
 
-  const paginatedBatches = batches.slice(
-    (currentPage - 1) * itemsPerPage,
-    currentPage * itemsPerPage
-  );
+  const paginatedBatches = batches
+    .filter(b => !b.sold) // Only show Available in the main grid for clarity (or consistent with old behavior). 
+    // Actually, "Total batches listed" (Overview) vs "Sold". 
+    // If I filter sold here, the paginated list is "Available".
+    // The MarketInsights will receive `batches` which has everything (sold & available).
+    // Keep Grid for Available only for UX?  User said "deleted batches do not appear".
+    // Sold batches usually appear in "Sold" tab or similar. I'll filter sold out of the main grid for better UX, 
+    // BUT passing full list to MarketInsights.
+    .slice((currentPage - 1) * itemsPerPage, currentPage * itemsPerPage);
 
   return (
     <div className="min-h-screen bg-background">
       <main className="container mx-auto px-4 py-12">
-        <div className="flex flex-col md:flex-row md:items-end justify-between mb-12 gap-8">
-          <div className="space-y-4">
-            <div className="flex items-center gap-2">
-              <span className="w-2 h-2 rounded-full bg-green-500 animate-pulse"></span>
-              <span className="text-xs font-bold tracking-widest text-green-700 uppercase">Live Marketplace</span>
-            </div>
-            <h1 className="text-6xl font-black text-gray-900 tracking-tight leading-none">
-              Fresh<span className="text-primary">.</span><br />
-              Harvest
-            </h1>
-          </div>
-
-          <div className="flex items-center gap-8 bg-white/50 backdrop-blur-sm p-4 rounded-2xl border border-stone-100">
-            <div className="text-right">
-              <p className="text-xs font-medium text-gray-400 uppercase tracking-widest">Rolling Volume</p>
-              <p className="text-xl font-bold text-gray-900">42,000 kg</p>
-            </div>
-            <div className="w-px h-8 bg-gray-200"></div>
-            <div className="text-right">
-              <p className="text-xs font-medium text-gray-400 uppercase tracking-widest">Market Index</p>
-              <p className="text-xl font-bold text-primary">0.001 ETH</p>
-            </div>
-          </div>
+        <div className="flex flex-col items-center justify-center mb-16 text-center">
+          <h1 className="text-5xl font-black text-[#1E1E1E] md:text-7xl mb-6 leading-tight">
+            Decentralized Orange Marketplace
+          </h1>
+          <p className="max-w-3xl text-xl text-gray-600 font-medium leading-relaxed">
+            Buy authentic Nagpur oranges directly from farmers with blockchain-backed transparency, fair pricing, and verified origin.
+          </p>
         </div>
+
+        <MarketInsights batches={batches} />
 
         <div className="sticky top-20 z-40 mb-10 py-4 bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/80">
           <div className="flex items-center justify-between">

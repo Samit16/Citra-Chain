@@ -13,6 +13,7 @@ import Image from 'next/image';
 import { CONTRACT_ADDRESS, CONTRACT_ABI } from '@/lib/contract-config';
 import { QRCodeSVG } from 'qrcode.react';
 import { format } from 'date-fns';
+import { getBatchImage } from '@/lib/image-mapper';
 
 type BatchDetails = {
     id: string;
@@ -144,7 +145,7 @@ export default function BatchDetailPage({ params }: { params: { batchId: string 
                         <div className="space-y-6">
                             <div className="relative h-[400px] rounded-3xl overflow-hidden shadow-2xl">
                                 <Image
-                                    src={`https://picsum.photos/seed/${batch.id}/800/800`}
+                                    src={getBatchImage(batch.id)}
                                     alt="Harvest Image"
                                     fill
                                     className="object-cover"

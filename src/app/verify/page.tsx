@@ -12,6 +12,7 @@ import { format } from 'date-fns';
 import { ethers } from 'ethers';
 import { useToast } from '@/hooks/use-toast';
 import Image from 'next/image';
+import { getBatchImage } from '@/lib/image-mapper';
 import { CONTRACT_ADDRESS, CONTRACT_ABI } from '@/lib/contract-config';
 
 type BatchDetails = {
@@ -153,7 +154,7 @@ export default function VerifyPage() {
                     <div className="grid md:grid-cols-2 gap-12 w-full max-w-5xl">
                         <div className="relative h-[400px] md:h-auto rounded-3xl overflow-hidden shadow-2xl">
                             <Image
-                                src={`https://picsum.photos/seed/${batch.id}/800/800`}
+                                src={getBatchImage(batch.id)}
                                 alt="Harvest Image"
                                 fill
                                 className="object-cover"

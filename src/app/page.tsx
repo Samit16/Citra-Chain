@@ -10,10 +10,14 @@ import type { HarvestBatch } from '@/lib/types';
 import { Header } from '@/components/shared/header';
 import { Footer } from '@/components/marketplace/footer';
 
+import { EditBatchDialog } from '@/components/marketplace/edit-batch-dialog';
+import { getBatchImage } from '@/lib/image-mapper';
+
 export default function Home() {
   const [batches, setBatches] = useState<HarvestBatch[]>([]);
   const { contract, account } = useWallet();
   const [loading, setLoading] = useState(false);
+  const [editingBatch, setEditingBatch] = useState<{ id: string, quantity: number, pricePerKg?: number } | null>(null);
 
   // Initial fetch
   useEffect(() => {
@@ -29,17 +33,13 @@ export default function Home() {
       const count = await contract.batchCount();
       const fetchedBatches: HarvestBatch[] = [];
 
-      // Iterate backwards to show newest first
       for (let i = Number(count); i >= 1; i--) {
         const batch = await contract.batches(i);
-        // batch structure in result object depends on ABI names. 
-        // User provided ABI has `pricePerKgWei`. 
-        // Note: quantities in Solidity are BigInt.
 
-        // Filter: show only batches created by connected farmer
         if (batch.farmer.toLowerCase() === account.toLowerCase()) {
-          // Check if ABI uses pricePerKgWei or pricePerKg
           const priceWei = batch.pricePerKgWei || batch.pricePerKg || 0;
+          // Check for isActive. If undefined (old contract), treat as true
+          const isActive = batch.isActive !== undefined ? batch.isActive : (batch[5] !== undefined ? batch[5] : true);
 
           fetchedBatches.push({
             id: i.toString(),
@@ -48,13 +48,12 @@ export default function Home() {
             harvestDate: new Date(Number(batch.harvestDate) * 1000),
             farmLocation: 'Nagpur',
             status: batch.sold ? 'Sold' : 'Listed',
+            isActive: isActive,
             image: {
-              src: `https://picsum.photos/seed/${i}/600/400`,
+              src: getBatchImage(i),
               hint: 'fresh orange harvest'
             },
-            // Format Wei to Ether for UI display (e.g. "0.01")
             pricePerKg: Number(ethers.formatEther(priceWei)),
-            // Store original Wei if needed, but UI uses pricePerKg
             blockchainTransaction: 'Verified'
           });
         }
@@ -64,6 +63,41 @@ export default function Home() {
       console.error("Error fetching batches:", error);
     } finally {
       setLoading(false);
+    }
+  };
+
+  const handleEdit = (batch: HarvestBatch) => {
+    setEditingBatch({
+      id: batch.id,
+      quantity: batch.quantity,
+      pricePerKg: batch.pricePerKg
+    });
+  };
+
+  const handleSaveEdit = async (batchId: string, quantity: number, pricePerKg: string) => {
+    if (!contract) return;
+    try {
+      const priceWei = ethers.parseEther(pricePerKg);
+      const tx = await contract.updateBatch(batchId, quantity, priceWei);
+      await tx.wait();
+      fetchBatches(); // Refresh
+    } catch (e) {
+      console.error("Update failed", e);
+      alert("Failed to update batch. See console.");
+    }
+  };
+
+  const handleDelete = async (batchId: string) => {
+    if (!contract) return;
+    if (!confirm("Are you sure you want to deactivate this batch? This cannot be undone.")) return;
+
+    try {
+      const tx = await contract.deactivateBatch(batchId);
+      await tx.wait();
+      fetchBatches();
+    } catch (e) {
+      console.error("Deactivation failed", e);
+      alert("Failed to deactivate batch. See console.");
     }
   };
 
@@ -81,8 +115,18 @@ export default function Home() {
         {loading ? (
           <div className="flex justify-center p-8">Loading blockchain data...</div>
         ) : (
-          <RecentHarvests batches={batches} />
+          <RecentHarvests
+            batches={batches}
+            onEdit={handleEdit}
+            onDelete={handleDelete}
+          />
         )}
+        <EditBatchDialog
+          isOpen={!!editingBatch}
+          onClose={() => setEditingBatch(null)}
+          onSave={handleSaveEdit}
+          batch={editingBatch}
+        />
       </main>
       <Footer />
     </div>
