@@ -106,12 +106,23 @@ export default function MarketplacePage() {
     setLoading(true);
     let contractToUse = walletContract;
 
-    if (!contractToUse && typeof window !== 'undefined' && window.ethereum) {
-      try {
-        const provider = new ethers.BrowserProvider(window.ethereum);
-        contractToUse = new ethers.Contract(CONTRACT_ADDRESS, CONTRACT_ABI, provider);
-      } catch (e) {
-        console.error("Failed to create read-only provider", e);
+    if (!contractToUse) {
+      // Fallback 1: Try window.ethereum if available
+      if (typeof window !== 'undefined' && window.ethereum) {
+        try {
+          const provider = new ethers.BrowserProvider(window.ethereum);
+          contractToUse = new ethers.Contract(CONTRACT_ADDRESS, CONTRACT_ABI, provider);
+        } catch (e) { console.error("Ethers provider error", e); }
+      }
+
+      // Fallback 2: Use Public RPC (Sepolia) ensuring global visibility for everyone
+      if (!contractToUse) {
+        try {
+          const provider = new ethers.JsonRpcProvider("https://ethereum-sepolia-rpc.publicnode.com");
+          contractToUse = new ethers.Contract(CONTRACT_ADDRESS, CONTRACT_ABI, provider);
+        } catch (e) {
+          console.error("Public RPC provider failed", e);
+        }
       }
     }
 
@@ -123,41 +134,27 @@ export default function MarketplacePage() {
     try {
       const count = await contractToUse.batchCount();
       const fetchedBatches: CustomerHarvestBatch[] = [];
+      const promises = [];
 
       for (let i = Number(count); i >= 1; i--) {
-        const batch = await contractToUse.batches(i);
-        // batch: [farmer, quantity, price, date, sold, isActive]
-        // isActive is likely at index 5 or property 'isActive'
+        promises.push(contractToUse.batches(i).then((batch: any) => ({
+          id: i,
+          raw: batch
+        })));
+      }
 
-        // We must check if batch.isActive is present. If undefined (old contract), we might default to true/false.
-        // Given new requirements, we only show active.
+      const results = await Promise.all(promises);
+
+      for (const item of results) {
+        const batch = item.raw;
+        // batch: [farmer, quantity, price, date, sold, isActive]
         const isActive = batch.isActive !== undefined ? batch.isActive : (batch[5] !== undefined ? batch[5] : true);
 
         if (!isActive) continue; // Skip deleted items
 
-        // Also note: we need to pass ALL active batches (including sold) to MarketInsights,
-        // but for the LIST below, we probably only want UNSOLD?
-        // Prompt says "Dashboard widgets... Popular Batches... Market Overview: Total batches listed, Total batches sold".
-        // This implies we should fetch everything active, pass to Insights, and then filtering for the GRID display?
-        // Currently the list loop filters `!batch.sold`.
-        // I'll keep filtering active && !sold for the LIST. 
-        // But MarketInsights needs SOLD batches too.
-        // So I should separate the "all active batches" from "available to buy batches".
-
-        // Refactor: We fetch ALL active batches. Then filter for Grid.
-        // Actually, previous code: if (!batch.sold) { push }
-        // I will change to: push ALL active batches. Then let the Grid filter?
-        // Or store separate state?
-        // Simpler: Just fetch all active ones. Render all in Grid? No, usually marketplace grid hides sold items or puts them at end.
-        // I'll fetch ALL active. Grid will show all but maybe badge Sold ones.
-        // Wait, requirement 2: "Popular Batches (Sorted by recent purchases)" implies sold ones should be visible?
-        // Filter: "Batches owned by connected farmer" is for Dashboard.
-        // Marketplace is for "Buying".
-        // I'll fetch all active batches.
-
         const priceWei = batch.pricePerKgWei || batch.pricePerKg || 0;
         fetchedBatches.push({
-          id: i.toString(),
+          id: item.id.toString(),
           name: 'Nagpur Mandarin',
           location: 'Nagpur, IN',
           quantity: Number(batch.quantity),
@@ -165,7 +162,7 @@ export default function MarketplacePage() {
           verified: true,
           grade: { name: 'Grade A', color: 'bg-green-100 text-green-700' },
           image: {
-            src: getBatchImage(i),
+            src: getBatchImage(item.id),
             hint: 'fresh orange harvest'
           },
           pricePerKg: Number(ethers.formatEther(priceWei)),

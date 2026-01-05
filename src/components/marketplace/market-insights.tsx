@@ -1,29 +1,32 @@
-
 'use client';
-
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { CustomerHarvestBatch } from "@/lib/types";
 import {
     Chart as ChartJS,
     CategoryScale,
     LinearScale,
-    BarElement,
+    PointElement,
+    LineElement,
     Title,
     Tooltip,
     Legend,
-    ArcElement
+    ArcElement,
+    Filler
 } from 'chart.js';
-import { Bar, Pie } from 'react-chartjs-2';
+import { Line, Pie } from 'react-chartjs-2';
 import { useMemo } from "react";
+import { format } from "date-fns";
 
 ChartJS.register(
     CategoryScale,
     LinearScale,
-    BarElement,
+    PointElement,
+    LineElement,
     Title,
     Tooltip,
     Legend,
-    ArcElement
+    ArcElement,
+    Filler
 );
 
 interface MarketInsightsProps {
@@ -37,31 +40,35 @@ export function MarketInsights({ batches }: MarketInsightsProps) {
         const soldBatches = batches.filter(b => b.sold).length;
         const activeBatches = totalBatches - soldBatches;
 
-        // Farmers
-        const farmerCounts: Record<string, number> = {};
-        batches.forEach(b => {
-            if (b.farmer) {
-                const f = b.farmer.substring(0, 6) + '...';
-                farmerCounts[f] = (farmerCounts[f] || 0) + 1;
-            }
-        });
+        // Price Trend Data
+        // Sort by date ascending
+        const sortedBatches = [...batches].sort((a, b) => a.harvestDate.getTime() - b.harvestDate.getTime());
 
-        const topFarmers = Object.entries(farmerCounts)
-            .sort((a, b) => b[1] - a[1])
-            .slice(0, 5);
+        // Take the last 10-20 data points to avoid overcrowding if many
+        // For now, just take all or slice? Let's take all but group by date?
+        // Simple approach: Map each batch to a point. If same date, well, multiple points or average.
+        // Let's just list them in sequence.
 
-        return { totalBatches, soldBatches, activeBatches, topFarmers };
+        const priceHistory = sortedBatches.map(b => ({
+            date: format(b.harvestDate, 'MMM dd'),
+            price: b.pricePerKg
+        }));
+
+        return { totalBatches, soldBatches, activeBatches, priceHistory };
     }, [batches]);
 
-    const barData = {
-        labels: stats.topFarmers.map(f => f[0]),
+    const lineData = {
+        labels: stats.priceHistory.map(p => p.date),
         datasets: [
             {
-                label: 'Batches Listed',
-                data: stats.topFarmers.map(f => f[1]),
-                backgroundColor: 'rgba(245, 138, 7, 0.5)',
-                borderColor: 'rgba(245, 138, 7, 1)',
-                borderWidth: 1,
+                label: 'Price per Kg (ETH)',
+                data: stats.priceHistory.map(p => p.price),
+                borderColor: 'rgb(34, 197, 94)', // Green-500
+                backgroundColor: 'rgba(34, 197, 94, 0.1)',
+                tension: 0.4, // Smooth curves
+                fill: true,
+                pointRadius: 4,
+                pointBackgroundColor: 'rgb(34, 197, 94)',
             },
         ],
     };
@@ -110,15 +117,34 @@ export function MarketInsights({ batches }: MarketInsightsProps) {
 
                 <Card className="col-span-1 md:col-span-1">
                     <CardHeader>
-                        <CardTitle className="text-sm font-medium text-gray-500 uppercase">Top Farmers</CardTitle>
+                        <CardTitle className="text-sm font-medium text-gray-500 uppercase">Price Trend (ETH/kg)</CardTitle>
                     </CardHeader>
                     <CardContent>
-                        <Bar
-                            data={barData}
+                        <Line
+                            data={lineData}
                             options={{
                                 responsive: true,
-                                plugins: { legend: { display: false } },
-                                scales: { y: { beginAtZero: true, ticks: { precision: 0 } } }
+                                plugins: {
+                                    legend: { display: false },
+                                    tooltip: {
+                                        mode: 'index',
+                                        intersect: false,
+                                    }
+                                },
+                                scales: {
+                                    y: {
+                                        beginAtZero: true,
+                                        grid: { color: 'rgba(0,0,0,0.05)' }
+                                    },
+                                    x: {
+                                        grid: { display: false }
+                                    }
+                                },
+                                interaction: {
+                                    mode: 'nearest',
+                                    axis: 'x',
+                                    intersect: false
+                                }
                             }}
                         />
                     </CardContent>

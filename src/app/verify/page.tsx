@@ -50,11 +50,20 @@ export default function VerifyPage() {
         let contractToUse = walletContract;
 
         // Try read-only if not connected
-        if (!contractToUse && typeof window !== 'undefined' && window.ethereum) {
-            try {
-                const provider = new ethers.BrowserProvider(window.ethereum);
-                contractToUse = new ethers.Contract(CONTRACT_ADDRESS, CONTRACT_ABI, provider);
-            } catch (e) { console.error(e); }
+        if (!contractToUse) {
+            if (typeof window !== 'undefined' && window.ethereum) {
+                try {
+                    const provider = new ethers.BrowserProvider(window.ethereum);
+                    contractToUse = new ethers.Contract(CONTRACT_ADDRESS, CONTRACT_ABI, provider);
+                } catch (e) { console.error(e); }
+            }
+            // Fallback to Public RPC
+            if (!contractToUse) {
+                try {
+                    const provider = new ethers.JsonRpcProvider("https://ethereum-sepolia-rpc.publicnode.com");
+                    contractToUse = new ethers.Contract(CONTRACT_ADDRESS, CONTRACT_ABI, provider);
+                } catch (e) { console.error("Public RPC Error", e); }
+            }
         }
 
         if (!contractToUse) {

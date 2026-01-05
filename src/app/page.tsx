@@ -33,17 +33,31 @@ export default function Home() {
     try {
       const count = await contract.batchCount();
       const fetchedBatches: HarvestBatch[] = [];
+      const promises = [];
 
+      // Create an array of promises to fetch batches in parallel
       for (let i = Number(count); i >= 1; i--) {
-        const batch = await contract.batches(i);
+         promises.push(contract.batches(i).then((batch: any) => ({
+             ...batch,
+             id: i, // Preserve ID
+             // Need to manually map array-like return from ethers to objects if not returned as struct, 
+             // but strictly: ethers contracts return Result object that acts like array & object.
+             // We'll pass the whole result for processing.
+             raw: batch
+         })));
+      }
+      
+      const results = await Promise.all(promises);
 
+      for (const item of results) {
+        const batch = item.raw;
+        
         if (batch.farmer.toLowerCase() === account.toLowerCase()) {
           const priceWei = batch.pricePerKgWei || batch.pricePerKg || 0;
-          // Check for isActive. If undefined (old contract), treat as true
           const isActive = batch.isActive !== undefined ? batch.isActive : (batch[5] !== undefined ? batch[5] : true);
 
           fetchedBatches.push({
-            id: i.toString(),
+            id: item.id.toString(),
             cropType: 'Nagpur Orange',
             quantity: Number(batch.quantity),
             harvestDate: new Date(Number(batch.harvestDate) * 1000),
@@ -51,7 +65,7 @@ export default function Home() {
             status: batch.sold ? 'Sold' : 'Listed',
             isActive: isActive,
             image: {
-              src: getBatchImage(i),
+              src: getBatchImage(item.id),
               hint: 'fresh orange harvest'
             },
             pricePerKg: Number(ethers.formatEther(priceWei)),
