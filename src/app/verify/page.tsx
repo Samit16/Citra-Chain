@@ -1,7 +1,7 @@
 'use client';
 
 import { useSearchParams } from 'next/navigation';
-import { useEffect, useState } from 'react';
+import { useEffect, useState, Suspense } from 'react';
 import { useWallet } from '@/context/WalletContext';
 import { Header } from '@/components/shared/header';
 import { Button } from '@/components/ui/button';
@@ -13,7 +13,7 @@ import { ethers } from 'ethers';
 import { useToast } from '@/hooks/use-toast';
 import Image from 'next/image';
 import { getBatchImage } from '@/lib/image-mapper';
-import { Textarea } from '@/components/ui/textarea'; // Assuming it exists or I use standard
+import { Textarea } from '@/components/ui/textarea';
 import { ArrowRight, QrCode } from 'lucide-react';
 
 import { CONTRACT_ADDRESS, CONTRACT_ABI } from '@/lib/contract-config';
@@ -28,7 +28,8 @@ type BatchDetails = {
     sold: boolean;
 };
 
-export default function VerifyPage() {
+// Internal component that uses useSearchParams
+function VerifyContent() {
     const searchParams = useSearchParams();
     const paramBatchId = searchParams.get('batchId');
     const { contract: walletContract, account, isConnected, connectWallet, isWrongNetwork, switchToSepolia } = useWallet();
@@ -172,7 +173,6 @@ export default function VerifyPage() {
 
     // If no batch loaded yet, show the Verification Form
     if (!batch && !loading) {
-        // ... (previous content for QR form)
         return (
             <div className="min-h-screen bg-background flex flex-col">
                 <Header />
@@ -211,7 +211,6 @@ export default function VerifyPage() {
         );
     }
 
-    // Logic for displaying batch (continues below)
     const isOwner = account && batch && account.toLowerCase() === batch.farmer.toLowerCase();
 
     return (
@@ -331,5 +330,21 @@ export default function VerifyPage() {
                 )}
             </main>
         </div>
+    );
+}
+
+// Main page component wrapped in Suspense
+export default function VerifyPage() {
+    return (
+        <Suspense fallback={
+            <div className="min-h-screen bg-background flex flex-col">
+                <Header />
+                <div className="flex-1 flex items-center justify-center">
+                    <Loader2 className="animate-spin h-8 w-8 text-orange-600" />
+                </div>
+            </div>
+        }>
+            <VerifyContent />
+        </Suspense>
     );
 }
