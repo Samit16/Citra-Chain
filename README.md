@@ -114,13 +114,12 @@ struct Batch {
     ```
 
 4.  **Open in Browser**
-    Visit `http://localhost:3000` to see the application.
+    Visit `https://citrachain.vercel.app/` to see the application.
 
 ---
 
 ## 📸 Demo
 
-*(Add a GIF or Screenshot of your application flow here)*
 
 > "Connecting the zest of the earth with the speed of the chain." 🍊-⛓️
 
