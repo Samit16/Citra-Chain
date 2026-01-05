@@ -17,6 +17,8 @@ type WalletContextType = {
     connectWallet: () => Promise<void>;
     disconnectWallet: () => void;
     isConnected: boolean;
+    isWrongNetwork: boolean;
+    switchToSepolia: () => Promise<void>;
 };
 
 const WalletContext = createContext<WalletContextType | undefined>(undefined);
@@ -25,12 +27,64 @@ export function WalletProvider({ children }: { children: React.ReactNode }) {
     const [account, setAccount] = useState<string | null>(null);
     const [provider, setProvider] = useState<ethers.BrowserProvider | null>(null);
     const [contract, setContract] = useState<ethers.Contract | null>(null);
+    const [isWrongNetwork, setIsWrongNetwork] = useState(false);
+
+    const SEPOLIA_CHAIN_ID = '0xaa36a7'; // 11155111
+
+    const checkNetwork = async (prov: ethers.BrowserProvider) => {
+        const network = await prov.getNetwork();
+        const chainId = network.chainId;
+        // 11155111n is BigInt
+        const isSepolia = chainId === BigInt(11155111);
+        setIsWrongNetwork(!isSepolia);
+        return isSepolia;
+    };
+
+    const switchToSepolia = async () => {
+        if (!window.ethereum) return;
+        try {
+            await window.ethereum.request({
+                method: 'wallet_switchEthereumChain',
+                params: [{ chainId: SEPOLIA_CHAIN_ID }],
+            });
+            window.location.reload();
+        } catch (switchError: any) {
+            // This error code indicates that the chain has not been added to MetaMask.
+            if (switchError.code === 4902) {
+                try {
+                    await window.ethereum.request({
+                        method: 'wallet_addEthereumChain',
+                        params: [
+                            {
+                                chainId: SEPOLIA_CHAIN_ID,
+                                chainName: 'Sepolia Test Network',
+                                nativeCurrency: {
+                                    name: 'Sepolia ETH',
+                                    symbol: 'SEP',
+                                    decimals: 18,
+                                },
+                                rpcUrls: ['https://sepolia.drpc.org'],
+                                blockExplorerUrls: ['https://sepolia.etherscan.io'],
+                            },
+                        ],
+                    });
+                    window.location.reload();
+                } catch (addError) {
+                    console.error(addError);
+                }
+            }
+            console.error(switchError);
+        }
+    };
 
     const checkConnection = async () => {
         if (window.ethereum) {
             try {
                 const _provider = new ethers.BrowserProvider(window.ethereum);
                 const accounts = await _provider.send("eth_accounts", []);
+
+                await checkNetwork(_provider);
+
                 if (accounts.length > 0) {
                     setupConnection(accounts[0], _provider);
                 }
@@ -43,12 +97,15 @@ export function WalletProvider({ children }: { children: React.ReactNode }) {
     const setupConnection = async (acc: string, prov: ethers.BrowserProvider) => {
         setAccount(acc);
         setProvider(prov);
+
+        const isSepolia = await checkNetwork(prov);
+        if (!isSepolia) return;
+
         try {
             const signer = await prov.getSigner();
             const _contract = new ethers.Contract(CONTRACT_ADDRESS, CONTRACT_ABI, signer);
             setContract(_contract);
         } catch (e) {
-            // If contract initialization fails (e.g. wrong network), we still set account but no contract
             console.error("Error setting up contract:", e);
         }
     };
@@ -57,6 +114,7 @@ export function WalletProvider({ children }: { children: React.ReactNode }) {
         setAccount(null);
         setProvider(null);
         setContract(null);
+        setIsWrongNetwork(false);
     };
 
     const connectWallet = async () => {
@@ -64,7 +122,13 @@ export function WalletProvider({ children }: { children: React.ReactNode }) {
             try {
                 const _provider = new ethers.BrowserProvider(window.ethereum);
                 const accounts = await _provider.send("eth_requestAccounts", []);
-                setupConnection(accounts[0], _provider);
+
+                const isSepolia = await checkNetwork(_provider);
+                if (!isSepolia) {
+                    await switchToSepolia();
+                } else {
+                    setupConnection(accounts[0], _provider);
+                }
             } catch (err) {
                 console.error("User rejected request:", err);
             }
@@ -77,19 +141,9 @@ export function WalletProvider({ children }: { children: React.ReactNode }) {
         checkConnection();
         if (window.ethereum) {
             window.ethereum.on('accountsChanged', (accounts: string[]) => {
-                if (accounts.length > 0) {
-                    // Re-instantiate provider? Actually existing provider stays valid usually, just needs signer refresh
-                    // But simpler to reload page or re-run setup
-                    window.location.reload();
-                } else {
-                    setAccount(null);
-                    setContract(null);
-                }
+                window.location.reload();
             });
             window.ethereum.on('chainChanged', () => window.location.reload());
-        }
-        return () => {
-            // cleanup listeners if needed
         }
     }, []);
 
@@ -101,7 +155,9 @@ export function WalletProvider({ children }: { children: React.ReactNode }) {
                 contract,
                 connectWallet,
                 disconnectWallet,
-                isConnected: !!account
+                isConnected: !!account,
+                isWrongNetwork,
+                switchToSepolia
             }}
         >
             {children}

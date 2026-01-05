@@ -37,21 +37,21 @@ export default function Home() {
 
       // Create an array of promises to fetch batches in parallel
       for (let i = Number(count); i >= 1; i--) {
-         promises.push(contract.batches(i).then((batch: any) => ({
-             ...batch,
-             id: i, // Preserve ID
-             // Need to manually map array-like return from ethers to objects if not returned as struct, 
-             // but strictly: ethers contracts return Result object that acts like array & object.
-             // We'll pass the whole result for processing.
-             raw: batch
-         })));
+        promises.push(contract.batches(i).then((batch: any) => ({
+          ...batch,
+          id: i, // Preserve ID
+          // Need to manually map array-like return from ethers to objects if not returned as struct, 
+          // but strictly: ethers contracts return Result object that acts like array & object.
+          // We'll pass the whole result for processing.
+          raw: batch
+        })));
       }
-      
+
       const results = await Promise.all(promises);
 
       for (const item of results) {
         const batch = item.raw;
-        
+
         if (batch.farmer.toLowerCase() === account.toLowerCase()) {
           const priceWei = batch.pricePerKgWei || batch.pricePerKg || 0;
           const isActive = batch.isActive !== undefined ? batch.isActive : (batch[5] !== undefined ? batch[5] : true);
@@ -121,15 +121,17 @@ export default function Home() {
     : batches.filter(b => b.status !== 'Sold' && b.isActive !== false);
 
   return (
-    <div className="flex min-h-screen flex-col bg-background text-foreground">
+    <div className="flex min-h-screen flex-col bg-orange-50/30 text-foreground">
       <Header />
-      <main className="container mx-auto flex-1 px-4 py-8">
-        <h1 className="text-3xl font-bold text-foreground mb-2">
-          Farmer Dashboard
-        </h1>
-        <p className="text-gray-500 mb-8">
-          Manage your harvests and track your sales on the marketplace.
-        </p>
+      <main className="container mx-auto flex-1 px-4 py-12">
+        <div className="mb-12">
+          <h1 className="text-4xl md:text-5xl font-black text-gray-900 mb-4 tracking-tight">
+            Farmer Dashboard
+          </h1>
+          <p className="text-xl text-gray-600 max-w-2xl font-medium">
+            Manage your harvests, track sales, and ensure transparency for your customers directly on the blockchain.
+          </p>
+        </div>
         <NewHarvest onRefresh={fetchBatches} />
         {loading ? (
           <div className="flex justify-center p-8">Loading blockchain data...</div>

@@ -27,7 +27,7 @@ type BatchDetails = {
 
 export default function BatchDetailPage({ params }: { params: { batchId: string } }) {
     const { batchId } = params;
-    const { contract: walletContract, account, isConnected, connectWallet } = useWallet();
+    const { contract: walletContract, account, isConnected, connectWallet, isWrongNetwork, switchToSepolia } = useWallet();
     const { toast } = useToast();
 
     const [batch, setBatch] = useState<BatchDetails | null>(null);
@@ -43,18 +43,11 @@ export default function BatchDetailPage({ params }: { params: { batchId: string 
         let contractToUse = walletContract;
 
         if (!contractToUse) {
-            if (typeof window !== 'undefined' && window.ethereum) {
-                try {
-                    const provider = new ethers.BrowserProvider(window.ethereum);
-                    contractToUse = new ethers.Contract(CONTRACT_ADDRESS, CONTRACT_ABI, provider);
-                } catch (e) { console.error(e); }
-            }
-            if (!contractToUse) {
-                try {
-                    const provider = new ethers.JsonRpcProvider("https://ethereum-sepolia-rpc.publicnode.com");
-                    contractToUse = new ethers.Contract(CONTRACT_ADDRESS, CONTRACT_ABI, provider);
-                } catch (e) { console.error("Public RPC Error", e); }
-            }
+            // Fallback to Public RPC directly for reliability
+            try {
+                const provider = new ethers.JsonRpcProvider("https://ethereum-sepolia-rpc.publicnode.com");
+                contractToUse = new ethers.Contract(CONTRACT_ADDRESS, CONTRACT_ABI, provider);
+            } catch (e) { console.error("Public RPC Error", e); }
         }
 
         if (!contractToUse) {
@@ -196,57 +189,61 @@ export default function BatchDetailPage({ params }: { params: { batchId: string 
                         {/* Right Side: Details & Actions */}
                         <div className="space-y-8 py-4">
                             <div>
-                                <h1 className="text-4xl font-black mb-2 text-foreground">Nagpur Orange Batch #{batch.id}</h1>
+                                <h1 className="text-4xl font-black mb-2 text-orange-950 tracking-tight">Nagpur Orange Batch #{batch.id}</h1>
                                 <div className="flex items-center gap-2 text-gray-500 font-medium">
                                     <User className="h-4 w-4" />
-                                    <span>Farmer: <span className="font-mono bg-gray-100 px-2 py-0.5 rounded text-gray-700 text-sm">{batch.farmer}</span></span>
-                                    {isOwner && <Badge variant="secondary">You (Owner)</Badge>}
+                                    <span>Farmer: <span className="font-mono bg-orange-100/50 px-2.5 py-1 rounded-md text-orange-800 text-sm border border-orange-200/50">{batch.farmer}</span></span>
+                                    {isOwner && <Badge variant="secondary" className="bg-orange-100 text-orange-800">You (Owner)</Badge>}
                                 </div>
                             </div>
 
                             <div className="grid grid-cols-2 gap-4">
-                                <Card className="bg-card border-none shadow-sm">
+                                <Card className="bg-white border-orange-100 shadow-sm rounded-2xl">
                                     <CardHeader className="pb-2">
-                                        <CardTitle className="text-sm font-medium text-muted-foreground tracking-widest uppercase">Harvested On</CardTitle>
+                                        <CardTitle className="text-xs font-bold text-gray-400 tracking-widest uppercase">Harvested On</CardTitle>
                                     </CardHeader>
                                     <CardContent>
-                                        <div className="text-2xl font-bold">{format(batch.harvestDate, 'MMMM dd, yyyy')}</div>
+                                        <div className="text-2xl font-black text-gray-800">{format(batch.harvestDate, 'MMMM dd, yyyy')}</div>
                                     </CardContent>
                                 </Card>
-                                <Card className="bg-card border-none shadow-sm">
+                                <Card className="bg-white border-orange-100 shadow-sm rounded-2xl">
                                     <CardHeader className="pb-2">
-                                        <CardTitle className="text-sm font-medium text-muted-foreground tracking-widest uppercase">Volume</CardTitle>
+                                        <CardTitle className="text-xs font-bold text-gray-400 tracking-widest uppercase">Volume</CardTitle>
                                     </CardHeader>
                                     <CardContent>
-                                        <div className="text-2xl font-bold">{batch.quantity} kg</div>
+                                        <div className="text-2xl font-black text-gray-800">{batch.quantity} kg</div>
                                     </CardContent>
                                 </Card>
                             </div>
 
-                            <div className="p-6 bg-secondary/30 rounded-3xl border border-border">
-                                <div className="flex justify-between items-center mb-6">
+                            <div className="p-8 bg-orange-50/50 rounded-3xl border border-orange-100/50">
+                                <div className="flex justify-between items-center mb-8">
                                     <div>
-                                        <p className="text-sm font-semibold text-gray-500 uppercase tracking-wider">Total Price</p>
-                                        <div className="text-4xl font-black text-primary">
+                                        <p className="text-xs font-bold text-gray-400 uppercase tracking-widest mb-1">Total Price</p>
+                                        <div className="text-4xl font-black text-orange-600 tracking-tight">
                                             {parseFloat(ethers.formatEther(BigInt(batch.quantity) * batch.pricePerKgWei)).toFixed(4)} ETH
-                                            <span className="text-lg text-gray-400 font-normal ml-2">(@ {batch.pricePerKgEth} ETH/kg)</span>
+                                            <span className="text-lg text-gray-400 font-bold ml-2">(@ {batch.pricePerKgEth} ETH/kg)</span>
                                         </div>
                                     </div>
                                     {batch.sold ? (
-                                        <Badge variant="destructive" className="text-lg px-4 py-1.5 uppercase tracking-widest">Sold Out</Badge>
+                                        <Badge variant="destructive" className="text-lg px-6 py-2 uppercase tracking-widest bg-red-500 hover:bg-red-600 shadow-lg shadow-red-200">Sold Out</Badge>
                                     ) : (
-                                        <Badge variant="outline" className="text-lg px-4 py-1.5 bg-green-100 text-green-700 border-green-200 uppercase tracking-widest">Available</Badge>
+                                        <Badge variant="outline" className="text-lg px-6 py-2 bg-emerald-100 text-emerald-800 border-emerald-200 uppercase tracking-widest font-bold shadow-sm">Available</Badge>
                                     )}
                                 </div>
 
                                 {!isConnected ? (
-                                    <Button size="lg" className="w-full h-16 text-lg font-bold rounded-2xl" onClick={connectWallet}>
+                                    <Button size="lg" className="w-full h-16 text-lg font-bold rounded-2xl bg-gray-900 text-white hover:bg-gray-800 transition-all shadow-xl shadow-gray-200 hover:shadow-2xl hover:-translate-y-0.5" onClick={connectWallet}>
                                         Connect Wallet to Buy
+                                    </Button>
+                                ) : isWrongNetwork ? (
+                                    <Button size="lg" variant="destructive" className="w-full h-16 text-lg font-bold rounded-2xl shadow-xl hover:-translate-y-0.5 transition-all" onClick={switchToSepolia}>
+                                        Switch to Sepolia Network
                                     </Button>
                                 ) : (
                                     <Button
                                         size="lg"
-                                        className="w-full h-16 text-lg font-bold rounded-2xl shadow-xl shadow-primary/20"
+                                        className="w-full h-16 text-lg font-bold rounded-2xl shadow-xl shadow-orange-500/20 bg-gradient-to-r from-orange-600 to-orange-500 hover:to-orange-600 hover:shadow-orange-500/40 transition-all hover:scale-[1.01] active:scale-[0.99]"
                                         disabled={batch.sold || purchasing || !!isOwner}
                                         onClick={handleBuy}
                                     >
@@ -256,7 +253,7 @@ export default function BatchDetailPage({ params }: { params: { batchId: string 
                                             "You cannot buy your own batch"
                                         ) : (
                                             <>
-                                                {purchasing ? <Loader2 className="mr-2 h-5 w-5 animate-spin" /> : <ShoppingCart className="mr-2 h-5 w-5" />}
+                                                {purchasing ? <Loader2 className="mr-2 h-6 w-6 animate-spin" /> : <ShoppingCart className="mr-2 h-6 w-6" />}
                                                 {purchasing ? "Processing Transaction..." : "Buy Now with ETH"}
                                             </>
                                         )}

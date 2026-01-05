@@ -54,84 +54,99 @@ const StatusBadge = ({ status, isActive }: { status: HarvestBatch['status'], isA
 
 export function RecentHarvests({ batches, onEdit, onDelete, onViewHistory, showHistory }: RecentHarvestsProps) {
   return (
-    <section>
-      <div className="flex items-center justify-between mb-6">
+    <section className="mb-20">
+      <div className="flex items-end justify-between mb-8">
         <div>
-          <h2 className="text-3xl font-bold text-foreground">
-            {showHistory ? "Full Harvest History" : "Your Active Harvests"}
+          <h2 className="text-4xl font-black text-gray-900 mb-2 tracking-tight">
+            {showHistory ? "Full History" : "Active Harvests"}
           </h2>
-          <p className="text-gray-500">
-            {showHistory ? "All your past and present batches." : "Track the status of your produce on the marketplace."}
+          <p className="text-lg text-gray-500 font-medium">
+            {showHistory ? "Archive of all your production cycles." : "Track and manage your current market listings."}
           </p>
         </div>
-        <Button variant="link" className="text-primary font-semibold" onClick={onViewHistory}>
-          {showHistory ? "View Active Only" : "View History"} <ArrowRight className="ml-2 h-4 w-4" />
+        <Button variant="ghost" className="text-orange-600 hover:text-orange-700 hover:bg-orange-50 font-bold group" onClick={onViewHistory}>
+          {showHistory ? "Switch to Active View" : "View Past Harvests"}
+          <ArrowRight className="ml-2 h-4 w-4 transition-transform group-hover:translate-x-1" />
         </Button>
       </div>
 
       <div className="grid gap-8 md:grid-cols-2 lg:grid-cols-3">
         {batches.map((batch) => {
           const isSold = batch.status === 'Sold';
-          const isActive = batch.isActive !== false; // Default true if undefined
+          const isActive = batch.isActive !== false;
 
           return (
-            <Card key={batch.id} className={`overflow-hidden rounded-2xl shadow-lg border-none bg-card group ${!isActive ? 'opacity-60 grayscale' : ''}`}>
-              <div className="relative">
+            <Card key={batch.id} className={`overflow-hidden rounded-3xl shadow-lg hover:shadow-2xl transition-all duration-300 border-none bg-white group ${!isActive ? 'opacity-70 bg-gray-50' : ''}`}>
+              <div className="relative h-64 overflow-hidden">
+                <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-transparent to-transparent z-10 opacity-60" />
                 <Image
                   src={batch.image.src}
                   alt={batch.cropType}
-                  width={600}
-                  height={400}
-                  className="h-48 w-full object-cover transition-transform duration-500 group-hover:scale-105"
+                  fill
+                  className="object-cover transition-transform duration-700 group-hover:scale-110"
                   data-ai-hint={batch.image.hint}
                 />
                 <StatusBadge status={batch.status} isActive={isActive} />
-                <div className="absolute bottom-4 left-4 bg-black/50 text-white text-xs font-mono rounded-md px-2 py-1 backdrop-blur-sm">
-                  ID: {batch.id}
+                <div className="absolute bottom-4 left-4 z-20">
+                  <p className="text-white/80 text-xs font-bold tracking-widest uppercase mb-1">Batch ID</p>
+                  <p className="text-white text-2xl font-black font-mono">#{batch.id}</p>
                 </div>
               </div>
-              <CardContent className="p-6">
-                <div className="flex justify-between items-center mb-4">
+
+              <CardContent className="p-8">
+                <div className="flex justify-between items-start mb-8">
                   <div>
-                    <p className="text-sm text-gray-500 flex items-center"><List className="w-4 h-4 mr-2" />Quantity</p>
-                    <p className="font-bold text-lg">{batch.quantity.toLocaleString()} kg</p>
+                    <p className="text-xs font-bold text-gray-400 uppercase tracking-wider mb-1 flex items-center gap-1.5">
+                      <List className="w-3.5 h-3.5" /> Volume
+                    </p>
+                    <p className="font-black text-2xl text-gray-800">{batch.quantity.toLocaleString()} <span className="text-base font-medium text-gray-400">kg</span></p>
                   </div>
-                  <div>
-                    <p className="text-sm text-gray-500 flex items-center"><Tag className="w-4 h-4 mr-2" />Date</p>
-                    <p className="font-bold text-lg">{format(batch.harvestDate, 'MMM dd')}</p>
+                  <div className="text-right">
+                    <p className="text-xs font-bold text-gray-400 uppercase tracking-wider mb-1 flex items-center justify-end gap-1.5">
+                      <Tag className="w-3.5 h-3.5" /> Harvested
+                    </p>
+                    <p className="font-bold text-xl text-gray-800">{format(batch.harvestDate, 'MMM dd, yyyy')}</p>
                   </div>
                 </div>
-                <div className="border-t border-dashed border-gray-200 my-4"></div>
+
+                <div className="h-px bg-gray-100 mb-6"></div>
+
                 {isSold ? (
-                  <div className="flex justify-between items-center">
-                    <div className="flex items-center gap-2 text-green-600 font-semibold">
-                      <CheckCircle2 className="h-5 w-5" />
-                      Sold
+                  <div className="bg-emerald-50 rounded-2xl p-4 flex items-center justify-between border border-emerald-100">
+                    <div className="flex items-center gap-3 text-emerald-800 font-bold">
+                      <div className="bg-emerald-100 p-2 rounded-full">
+                        <CheckCircle2 className="h-5 w-5 text-emerald-600" />
+                      </div>
+                      <span>Sold Out</span>
                     </div>
-                    <div>
-                      <p className="text-xs text-gray-500">TOTAL REVENUE</p>
-                      <p className="text-green-600 font-bold text-lg">
+                    <div className="text-right">
+                      <p className="text-[10px] uppercase font-bold text-emerald-600/70 tracking-wider">Revenue</p>
+                      <p className="text-emerald-900 font-black text-lg">
                         {Number((batch.quantity * (batch.pricePerKg || 0)).toFixed(4))} ETH
                       </p>
                     </div>
                   </div>
                 ) : isActive ? (
-                  <div className="flex items-center gap-2 mt-4">
-                    <div className="flex-1">
-                      <p className="text-xs text-gray-500">Price</p>
-                      <p className="font-bold text-lg">{batch.pricePerKg} ETH</p>
+                  <div className="flex items-center justify-between mt-2">
+                    <div>
+                      <p className="text-xs font-bold text-gray-400 uppercase tracking-wider mb-0.5">Listing Price</p>
+                      <p className="font-black text-2xl text-orange-600">{batch.pricePerKg} <span className="text-sm text-orange-400 font-bold">ETH/kg</span></p>
                     </div>
                     <div className="flex gap-2">
-                      <Button size="sm" variant="outline" onClick={() => onEdit(batch)}>
+                      <Button size="icon" variant="outline" className="h-10 w-10 rounded-full border-gray-200 hover:bg-orange-50 hover:text-orange-600 hover:border-orange-200 transition-colors" onClick={() => onEdit(batch)}>
                         <Pencil className="w-4 h-4" />
                       </Button>
-                      <Button size="sm" variant="destructive" onClick={() => onDelete(batch.id)}>
+                      <Button size="icon" variant="outline" className="h-10 w-10 rounded-full border-gray-200 hover:bg-red-50 hover:text-red-600 hover:border-red-200 transition-colors" onClick={() => onDelete(batch.id)}>
                         <Trash2 className="w-4 h-4" />
                       </Button>
                     </div>
                   </div>
                 ) : (
-                  <div className="text-center font-medium text-red-500">Batch Deactivated</div>
+                  <div className="bg-gray-50 rounded-2xl p-4 text-center border border-gray-100">
+                    <p className="font-bold text-gray-500 flex items-center justify-center gap-2">
+                      <XCircle className="w-4 h-4" /> Batch Deactivated
+                    </p>
+                  </div>
                 )}
               </CardContent>
             </Card>

@@ -26,61 +26,64 @@ import { ethers } from 'ethers';
 import { CONTRACT_ADDRESS, CONTRACT_ABI } from '@/lib/contract-config';
 
 const ProductCard = ({ product }: { product: CustomerHarvestBatch }) => (
-  <Card className="group relative overflow-hidden rounded-3xl border-none bg-white/70 shadow-sm hover:shadow-xl hover:bg-white transition-all duration-300 backdrop-blur-sm">
-    <div className="relative h-56 overflow-hidden">
+  <Card className="group relative overflow-hidden rounded-[2.5rem] border-none bg-white shadow-lg hover:shadow-2xl hover:-translate-y-1 transition-all duration-300">
+    <div className="relative h-72 overflow-hidden">
       <Image
         src={product.image.src}
         alt={product.name}
         fill
-        className="object-cover transition-transform duration-700 group-hover:scale-105"
+        className="object-cover transition-transform duration-700 group-hover:scale-110"
         data-ai-hint={product.image.hint}
       />
-      <div className="absolute inset-0 bg-gradient-to-t from-black/20 via-transparent to-transparent opacity-60" />
+      <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-black/0 to-black/0 opacity-60 transition-opacity group-hover:opacity-80" />
 
       {product.verified && (
-        <div className="absolute top-4 left-4 flex items-center gap-1.5 bg-white/90 backdrop-blur-md px-2.5 py-1 rounded-full shadow-sm">
-          <ShieldCheck className="w-3.5 h-3.5 text-blue-600" />
-          <span className="text-[10px] font-bold tracking-wide uppercase text-blue-900">Verified</span>
+        <div className="absolute top-5 left-5 flex items-center gap-2 bg-white/95 backdrop-blur-xl px-3 py-1.5 rounded-full shadow-sm z-10">
+          <ShieldCheck className="w-4 h-4 text-orange-600 fill-orange-100" />
+          <span className="text-[11px] font-bold tracking-widest uppercase text-orange-950">Verified</span>
         </div>
       )}
+
+      <div className="absolute bottom-5 left-5 right-5 text-white z-10">
+        <h3 className="text-2xl font-black leading-none mb-2 drop-shadow-sm">{product.name}</h3>
+        <div className="flex items-center gap-2 text-white/90 text-sm font-medium">
+          <span className="bg-white/20 backdrop-blur-md px-2 py-0.5 rounded text-xs border border-white/20">
+            {product.location}
+          </span>
+          <span className="w-1 h-1 bg-white rounded-full"></span>
+          <span>{format(product.harvestDate, 'MMM dd')}</span>
+        </div>
+      </div>
     </div>
 
-    <CardContent className="p-6">
-      <div className="mb-6 flex justify-between items-start">
+    <CardContent className="p-7">
+      <div className="grid grid-cols-2 gap-8 mb-8">
         <div>
-          <h3 className="text-xl font-bold text-gray-900 leading-tight mb-1 group-hover:text-primary transition-colors">{product.name}</h3>
-          <p className="text-sm text-gray-500 font-medium flex items-center gap-1">
-            <span className="w-1.5 h-1.5 rounded-full bg-gray-300"></span>
-            {product.location}
+          <p className="text-[10px] uppercase tracking-widest text-gray-400 font-bold mb-1">Available Volume</p>
+          <p className="text-xl font-bold text-gray-800 flex items-baseline gap-1">
+            {product.quantity.toLocaleString()}
+            <span className="text-sm font-medium text-gray-400">kg</span>
           </p>
         </div>
-        <Badge
-          variant="secondary"
-          className={`rounded-lg px-2.5 py-1 text-xs font-bold uppercase tracking-wider ${product.grade.color} bg-opacity-50 border-none`}
-        >
-          {product.grade.name}
-        </Badge>
-      </div>
-
-      <div className="grid grid-cols-2 gap-8 mb-6">
-        <div>
-          <p className="text-[11px] uppercase tracking-widest text-gray-400 font-semibold mb-1">Volume</p>
-          <p className="text-base font-semibold text-gray-700">{product.quantity.toLocaleString()} kg</p>
-        </div>
-        <div>
-          <p className="text-[11px] uppercase tracking-widest text-gray-400 font-semibold mb-1">Harvested</p>
-          <p className="text-base font-semibold text-gray-700">{format(product.harvestDate, 'MMM dd')}</p>
+        <div className="text-right">
+          <p className="text-[10px] uppercase tracking-widest text-gray-400 font-bold mb-1">Grade</p>
+          <Badge
+            variant="secondary"
+            className={`rounded-lg px-2 py-0.5 text-xs font-bold uppercase tracking-wider ${product.grade.color} bg-opacity-50 border-none inline-flex`}
+          >
+            {product.grade.name}
+          </Badge>
         </div>
       </div>
 
-      <div className="flex items-end justify-between pt-4 border-t border-gray-100/50">
+      <div className="flex items-end justify-between pt-6 border-t border-gray-100">
         <div>
-          <p className="text-xs text-gray-400 font-medium mb-0.5">Price per kg</p>
-          <p className="text-2xl font-black text-gray-900">{product.pricePerKg} ETH</p>
+          <p className="text-xs text-gray-400 font-bold uppercase tracking-wider mb-1">Price per kg</p>
+          <p className="text-3xl font-black text-orange-600 tracking-tight">{product.pricePerKg} <span className="text-lg text-gray-600 font-bold">ETH</span></p>
         </div>
         <Link href={`/batch/${product.id}`}>
-          <Button className="rounded-full w-12 h-12 p-0 bg-gray-900 hover:bg-primary text-white shadow-lg hover:shadow-primary/30 transition-all duration-300">
-            <ArrowRight className="h-5 w-5" />
+          <Button className="rounded-2xl w-14 h-14 p-0 bg-gray-900 hover:bg-orange-600 text-white shadow-xl hover:shadow-orange-500/30 transition-all duration-300 hover:scale-110">
+            <ArrowRight className="h-6 w-6" />
           </Button>
         </Link>
       </div>
@@ -107,22 +110,13 @@ export default function MarketplacePage() {
     let contractToUse = walletContract;
 
     if (!contractToUse) {
-      // Fallback 1: Try window.ethereum if available
-      if (typeof window !== 'undefined' && window.ethereum) {
-        try {
-          const provider = new ethers.BrowserProvider(window.ethereum);
-          contractToUse = new ethers.Contract(CONTRACT_ADDRESS, CONTRACT_ABI, provider);
-        } catch (e) { console.error("Ethers provider error", e); }
-      }
-
-      // Fallback 2: Use Public RPC (Sepolia) ensuring global visibility for everyone
-      if (!contractToUse) {
-        try {
-          const provider = new ethers.JsonRpcProvider("https://ethereum-sepolia-rpc.publicnode.com");
-          contractToUse = new ethers.Contract(CONTRACT_ADDRESS, CONTRACT_ABI, provider);
-        } catch (e) {
-          console.error("Public RPC provider failed", e);
-        }
+      // Fallback: Always use Public RPC (Sepolia) to ensure we read from correct chain
+      // regardless of user's wallet state or network.
+      try {
+        const provider = new ethers.JsonRpcProvider("https://ethereum-sepolia-rpc.publicnode.com");
+        contractToUse = new ethers.Contract(CONTRACT_ADDRESS, CONTRACT_ABI, provider);
+      } catch (e) {
+        console.error("Public RPC provider failed", e);
       }
     }
 
@@ -196,25 +190,29 @@ export default function MarketplacePage() {
     .slice((currentPage - 1) * itemsPerPage, currentPage * itemsPerPage);
 
   return (
-    <div className="min-h-screen bg-background">
-      <main className="container mx-auto px-4 py-12">
-        <div className="flex flex-col items-center justify-center mb-16 text-center">
-          <h1 className="text-5xl font-black text-[#1E1E1E] md:text-7xl mb-6 leading-tight">
-            Decentralized Orange Marketplace
+    <div className="min-h-screen bg-orange-50/30">
+      <main className="container mx-auto px-4 py-16">
+        <div className="flex flex-col items-center justify-center mb-20 text-center">
+          <Badge className="mb-4 bg-orange-100 text-orange-700 hover:bg-orange-200 border-none px-4 py-1.5 text-sm font-bold uppercase tracking-widest">
+            Sepolia Testnet Live
+          </Badge>
+          <h1 className="text-5xl font-black text-gray-900 md:text-7xl mb-6 leading-tight tracking-tight">
+            Decentralized <span className="text-transparent bg-clip-text bg-gradient-to-r from-orange-500 to-orange-600">Orange</span> Markets
           </h1>
-          <p className="max-w-3xl text-xl text-gray-600 font-medium leading-relaxed">
-            Buy authentic Nagpur oranges directly from farmers with blockchain-backed transparency, fair pricing, and verified origin.
+          <p className="max-w-2xl text-xl text-gray-500 font-medium leading-relaxed">
+            Direct farmer-to-buyer commerece. Verified harvests, fair pricing, and complete transparency powered by Ethereum.
           </p>
         </div>
 
         <MarketInsights batches={batches} />
 
-        <div className="sticky top-20 z-40 mb-10 py-4 bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/80">
-          <div className="flex items-center justify-between">
+        <div className="sticky top-24 z-40 mb-12 py-4 px-2">
+          <div className="absolute inset-0 bg-white/80 backdrop-blur-xl rounded-full shadow-sm border border-white/50 -mx-4" />
+          <div className="relative flex items-center justify-between px-2">
             <div className="flex items-center gap-2 overflow-x-auto pb-2 md:pb-0 no-scrollbar">
               <Button
-                variant="outline"
-                className="rounded-full h-10 px-4 border-gray-200 bg-white hover:bg-gray-50 text-gray-700 font-medium"
+                variant="ghost"
+                className="rounded-full h-10 px-4 text-gray-500 font-bold hover:bg-gray-100 hover:text-gray-900"
               >
                 <List className="h-4 w-4 mr-2" /> Filters
               </Button>
@@ -223,9 +221,9 @@ export default function MarketplacePage() {
                 <Button
                   key={tag}
                   onClick={() => toggleFilter(tag)}
-                  className={`rounded-full h-10 px-5 font-medium transition-all ${activeFilters.includes(tag)
-                    ? 'bg-gray-900 text-white hover:bg-gray-800 border border-gray-900'
-                    : 'bg-white text-gray-600 hover:bg-gray-50 border border-gray-200'
+                  className={`rounded-full h-10 px-6 font-bold transition-all shadow-sm ${activeFilters.includes(tag)
+                    ? 'bg-orange-600 text-white hover:bg-orange-700 border-transparent shadow-orange-200'
+                    : 'bg-white text-gray-500 hover:bg-gray-50 border border-gray-100'
                     }`}
                 >
                   {tag}
@@ -233,12 +231,12 @@ export default function MarketplacePage() {
               ))}
             </div>
 
-            <div className="flex items-center gap-2 bg-white rounded-full p-1 border border-gray-200 shadow-sm ml-4 shrink-0">
+            <div className="hidden md:flex items-center gap-1 bg-gray-100/50 rounded-full p-1 border border-gray-200/50 shadow-inner ml-4 shrink-0">
               <Button
                 size="icon"
                 variant="ghost"
                 onClick={() => setViewMode('grid')}
-                className={`w-9 h-9 rounded-full ${viewMode === 'grid' ? 'bg-gray-100 text-gray-900' : 'text-gray-400 hover:text-gray-600'}`}
+                className={`w-9 h-9 rounded-full transition-all ${viewMode === 'grid' ? 'bg-white text-orange-600 shadow-sm' : 'text-gray-400 hover:text-gray-600'}`}
               >
                 <LayoutGrid className="h-4 w-4" />
               </Button>
@@ -246,7 +244,7 @@ export default function MarketplacePage() {
                 size="icon"
                 variant="ghost"
                 onClick={() => setViewMode('list')}
-                className={`w-9 h-9 rounded-full ${viewMode === 'list' ? 'bg-gray-100 text-gray-900' : 'text-gray-400 hover:text-gray-600'}`}
+                className={`w-9 h-9 rounded-full transition-all ${viewMode === 'list' ? 'bg-white text-orange-600 shadow-sm' : 'text-gray-400 hover:text-gray-600'}`}
               >
                 <List className="h-4 w-4" />
               </Button>
