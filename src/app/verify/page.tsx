@@ -231,9 +231,12 @@ function VerifyContent() {
                                 fill
                                 className="object-cover"
                             />
-                            <div className="absolute top-6 left-6 bg-white/95 backdrop-blur px-4 py-2 rounded-full shadow-lg flex items-center gap-2">
-                                <ShieldCheck className="text-orange-600 h-5 w-5" />
-                                <span className="font-bold text-orange-950 uppercase tracking-widest text-xs">Blockchain Verified</span>
+                            <div className="absolute top-6 left-6 bg-white/95 backdrop-blur px-4 py-2 rounded-full shadow-lg flex flex-col gap-0.5">
+                                <div className="flex items-center gap-2">
+                                    <ShieldCheck className="text-orange-600 h-5 w-5" />
+                                    <span className="font-bold text-orange-950 uppercase tracking-widest text-xs">Blockchain Verified</span>
+                                </div>
+                                <span className="text-[10px] text-gray-500 font-medium pl-7">Data from Sepolia Testnet</span>
                             </div>
                         </div>
 
@@ -310,7 +313,7 @@ function VerifyContent() {
                                     </Button>
                                 )}
 
-                                <div className="mt-6 text-center space-y-2">
+                                <div className="mt-6 text-center space-y-3">
                                     <p className="text-xs text-gray-400">
                                         Data fetched directly from Sepolia Testnet.
                                     </p>
@@ -323,6 +326,9 @@ function VerifyContent() {
                                         View Contract on Etherscan
                                         <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"></path><polyline points="15 3 21 3 21 9"></polyline><line x1="10" y1="14" x2="21" y2="3"></line></svg>
                                     </a>
+                                    <p className="text-[10px] text-gray-400 font-mono pt-4 border-t border-gray-100 mt-4">
+                                        No backend. No database. Powered by Ethereum.
+                                    </p>
                                 </div>
                             </div>
                         </div>

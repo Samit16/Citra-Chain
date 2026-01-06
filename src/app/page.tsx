@@ -131,6 +131,9 @@ export default function Home() {
           <p className="text-xl text-gray-600 max-w-2xl font-medium">
             Manage your harvests, track sales, and ensure transparency for your customers directly on the blockchain.
           </p>
+          <p className="text-sm text-orange-600 font-bold mt-2 uppercase tracking-widest">
+            Direct Farmer-to-Buyer Marketplace
+          </p>
         </div>
         <NewHarvest onRefresh={fetchBatches} />
         {loading ? (

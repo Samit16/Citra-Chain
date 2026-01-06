@@ -8,6 +8,7 @@ import {
   LayoutGrid,
   List,
   ShieldCheck,
+  Tag
 } from 'lucide-react';
 
 import { Button } from '@/components/ui/button';
@@ -97,7 +98,7 @@ export default function MarketplacePage() {
   const [currentPage, setCurrentPage] = useState(1);
   const itemsPerPage = 6;
 
-  const { contract: walletContract, isConnected } = useWallet();
+  const { contract: walletContract, isConnected, connectWallet } = useWallet();
   const [batches, setBatches] = useState<CustomerHarvestBatch[]>([]);
   const [loading, setLoading] = useState(false);
 
@@ -199,8 +200,11 @@ export default function MarketplacePage() {
           <h1 className="text-5xl font-black text-gray-900 md:text-7xl mb-6 leading-tight tracking-tight">
             Decentralized <span className="text-transparent bg-clip-text bg-gradient-to-r from-orange-500 to-orange-600">Orange</span> Markets
           </h1>
-          <p className="max-w-2xl text-xl text-gray-500 font-medium leading-relaxed">
+          <p className="max-w-2xl text-xl text-gray-500 font-medium leading-relaxed mb-2">
             Direct farmer-to-buyer commerece. Verified harvests, fair pricing, and complete transparency powered by Ethereum.
+          </p>
+          <p className="text-sm font-bold text-orange-600 uppercase tracking-widest">
+            On-Chain Transparency • No Middlemen
           </p>
         </div>
 
@@ -255,9 +259,20 @@ export default function MarketplacePage() {
         {loading ? (
           <div className="flex justify-center p-20 text-xl font-medium text-gray-400">Loading live batches...</div>
         ) : batches.length === 0 ? (
-          <div className="flex flex-col items-center justify-center p-20 text-gray-400">
-            <p className="text-lg">No active batches available.</p>
-            {!isConnected && <p className="text-sm mt-2">Connect wallet to view verified listings.</p>}
+          <div className="flex flex-col items-center justify-center py-32 text-center">
+            <div className="bg-orange-50 p-6 rounded-full mb-6 relative">
+              <div className="absolute inset-0 bg-orange-100 rounded-full animate-ping opacity-20"></div>
+              <span className="text-4xl">🍊</span>
+            </div>
+            <h3 className="text-2xl font-black text-gray-900 mb-2">Marketplace is Empty</h3>
+            <p className="text-gray-500 font-medium max-w-sm mb-6 mx-auto">
+              Fresh harvests are currently being registered by farmers. Please check back soon.
+            </p>
+            {!isConnected && (
+              <Button onClick={connectWallet} variant="outline" className="rounded-full">
+                Connect Wallet to Refresh
+              </Button>
+            )}
           </div>
         ) : (
           <div className="grid grid-cols-1 gap-6 md:grid-cols-2 lg:grid-cols-3">
@@ -267,29 +282,31 @@ export default function MarketplacePage() {
           </div>
         )}
 
-        <div className="mt-12 flex items-center justify-center gap-2">
-          <Button
-            variant="outline"
-            size="icon"
-            onClick={() => setCurrentPage((p) => Math.max(1, p - 1))}
-            disabled={currentPage === 1}
-            className="rounded-full"
-          >
-            <ArrowLeft className="h-4 w-4" />
-          </Button>
-          <span className="text-sm font-medium">Page {currentPage}</span>
-          <Button
-            variant="outline"
-            size="icon"
-            onClick={() => setCurrentPage((p) => p + 1)}
-            disabled={
-              currentPage * itemsPerPage >= batches.length
-            }
-            className="rounded-full"
-          >
-            <ArrowRight className="h-4 w-4" />
-          </Button>
-        </div>
+        {paginatedBatches.length > 0 && (
+          <div className="mt-12 flex items-center justify-center gap-2">
+            <Button
+              variant="outline"
+              size="icon"
+              onClick={() => setCurrentPage((p) => Math.max(1, p - 1))}
+              disabled={currentPage === 1}
+              className="rounded-full"
+            >
+              <ArrowLeft className="h-4 w-4" />
+            </Button>
+            <span className="text-sm font-medium">Page {currentPage}</span>
+            <Button
+              variant="outline"
+              size="icon"
+              onClick={() => setCurrentPage((p) => p + 1)}
+              disabled={
+                currentPage * itemsPerPage >= batches.length
+              }
+              className="rounded-full"
+            >
+              <ArrowRight className="h-4 w-4" />
+            </Button>
+          </div>
+        )}
       </main>
       <footer className="bg-background text-sm text-gray-500">
         <div className="container mx-auto flex flex-wrap items-center justify-between gap-4 px-4 py-8">

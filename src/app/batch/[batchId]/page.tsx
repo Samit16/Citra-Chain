@@ -151,9 +151,12 @@ export default function BatchDetailPage({ params }: { params: { batchId: string 
                                     fill
                                     className="object-cover"
                                 />
-                                <div className="absolute top-6 left-6 bg-white/90 backdrop-blur px-4 py-2 rounded-full shadow-lg flex items-center gap-2">
-                                    <ShieldCheck className="text-blue-600 h-5 w-5" />
-                                    <span className="font-bold text-blue-900 uppercase tracking-wide text-sm">Blockchain Verified</span>
+                                <div className="absolute top-6 left-6 bg-white/95 backdrop-blur px-4 py-2 rounded-full shadow-lg flex flex-col gap-0.5">
+                                    <div className="flex items-center gap-2">
+                                        <ShieldCheck className="text-orange-600 h-5 w-5" />
+                                        <span className="font-bold text-orange-950 uppercase tracking-widest text-xs">Blockchain Verified</span>
+                                    </div>
+                                    <span className="text-[10px] text-gray-500 font-medium pl-7">Data from Sepolia Testnet</span>
                                 </div>
                             </div>
 

@@ -261,16 +261,17 @@ export function NewHarvest({ onRefresh }: NewHarvestProps) {
               </div>
 
               <div className="flex items-center justify-between pt-6 border-t border-gray-100">
-                <p className="text-sm text-gray-400 font-medium">
-                  <span className="text-orange-500">*</span> Required fields for verification
-                </p>
+                <div className="flex flex-col">
+                  <p className="text-xs text-gray-500 font-bold uppercase tracking-wider">✨ Immutable Record</p>
+                  <p className="text-[10px] text-gray-400">Data cannot be changed once on-chain.</p>
+                </div>
                 <Button
                   type="submit"
                   disabled={loading || !isConnected}
                   className="bg-gradient-to-r from-orange-500 to-orange-600 hover:from-orange-600 hover:to-orange-700 text-white shadow-lg shadow-orange-500/20 rounded-xl h-14 px-10 text-lg font-bold transition-all hover:scale-[1.02] active:scale-[0.98] disabled:opacity-70 disabled:hover:scale-100"
                 >
                   {loading ? <Loader2 className="mr-2 h-5 w-5 animate-spin" /> : <Plus className="mr-2 h-5 w-5 stroke-[3]" />}
-                  {loading ? 'Registering...' : 'Register Batch'}
+                  {loading ? 'Processing on Chain...' : 'Register Batch on Chain'}
                 </Button>
               </div>
             </form>

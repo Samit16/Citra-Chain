@@ -40,7 +40,7 @@ const NavLink = ({
 export function Header() {
   const pathname = usePathname();
   const isMarketplace = pathname === '/marketplace';
-  const { account, connectWallet, isConnected } = useWallet();
+  const { account, connectWallet, isConnected, isWrongNetwork } = useWallet();
   const [isMenuOpen, setIsMenuOpen] = useState(false);
 
   return (
@@ -98,19 +98,45 @@ export function Header() {
             </div>
           )}
 
-          <Button
-            variant="default"
-            onClick={connectWallet}
-            size="sm"
-            className="hidden md:flex rounded-full bg-gradient-to-r from-primary to-orange-600 px-6 text-white shadow-md hover:shadow-lg transition-all"
-          >
-            <Wallet className="mr-2 h-4 w-4" />
-            {isConnected ? `${account?.substring(0, 6)}...` : 'Connect'}
-          </Button>
+          {!isConnected ? (
+            <Button
+              variant="default"
+              onClick={connectWallet}
+              size="sm"
+              className="hidden md:flex rounded-full bg-gradient-to-r from-primary to-orange-600 px-6 text-white shadow-md hover:shadow-lg transition-all font-bold"
+            >
+              <Wallet className="mr-2 h-4 w-4" />
+              Connect Wallet
+            </Button>
+          ) : (
+            <div className="hidden md:flex items-center gap-3 bg-white/50 backdrop-blur-sm border border-orange-100 rounded-full pl-4 pr-1 py-1 shadow-sm">
+              <div className="flex items-center gap-2 mr-2">
+                <span className={`h-2 w-2 rounded-full ${isWrongNetwork ? 'bg-red-500 animate-pulse' : 'bg-emerald-500 box-shadow-green'}`} />
+                <span className="text-xs font-semibold text-gray-600">
+                  {isWrongNetwork ? 'Wrong Network' : 'Sepolia'}
+                </span>
+              </div>
+              <Button
+                variant="ghost"
+                size="sm"
+                className="h-8 rounded-full bg-white border border-gray-100 px-3 text-xs font-mono text-gray-600 hover:text-orange-600 hover:border-orange-200"
+                onClick={() => {
+                  if (account) {
+                    navigator.clipboard.writeText(account);
+                    // Visual feedback could be added here, but simple copy is fine for now
+                  }
+                }}
+                title="Copy Address"
+              >
+                {account?.substring(0, 6)}...{account?.substring(account.length - 4)}
+                {/* Integrated copy icon implied by action, keeping minimal */}
+              </Button>
+            </div>
+          )}
 
           {/* Mobile connect button icon only if needed, or just keep desktop one hidden */}
           {isConnected && (
-            <Avatar className="h-8 w-8 md:h-9 md:w-9 border-2 border-white shadow-sm cursor-pointer">
+            <Avatar className="h-8 w-8 md:h-9 md:w-9 border-2 border-white shadow-sm cursor-pointer md:hidden">
               <AvatarImage src="https://picsum.photos/seed/avatar/40/40" />
               <AvatarFallback>U</AvatarFallback>
             </Avatar>
