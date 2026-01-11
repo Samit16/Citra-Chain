@@ -1,6 +1,5 @@
 import { HeroSection } from '@/components/landing/hero-section';
 import { HowItWorks } from '@/components/landing/how-it-works';
-import { TrustSection } from '@/components/landing/trust-section';
 import { FinalCTA } from '@/components/landing/final-cta';
 import { LandingNav } from '@/components/landing/landing-nav';
 import { LandingFooter } from '@/components/landing/landing-footer';
@@ -27,10 +26,6 @@ export default function LandingPage() {
 
                 <div id="how-it-works">
                     <HowItWorks />
-                </div>
-
-                <div id="trust">
-                    <TrustSection />
                 </div>
 
                 <FinalCTA />

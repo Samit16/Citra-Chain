@@ -105,11 +105,11 @@
   }
 }
 
-/* Custom Landing Page Animations */
+/* Premium Landing Page Animations */
 @keyframes fadeIn {
   from {
     opacity: 0;
-    transform: translateY(20px);
+    transform: translateY(15px);
   }
   to {
     opacity: 1;
@@ -120,11 +120,11 @@
 @keyframes fadeInDelay {
   0% {
     opacity: 0;
-    transform: translateY(30px);
+    transform: translateY(20px);
   }
-  50% {
+  40% {
     opacity: 0;
-    transform: translateY(30px);
+    transform: translateY(20px);
   }
   100% {
     opacity: 1;
@@ -132,39 +132,71 @@
   }
 }
 
-@keyframes float {
+@keyframes subtleFloat {
   0%, 100% {
     transform: translateY(0px);
   }
   50% {
-    transform: translateY(-10px);
+    transform: translateY(-6px);
   }
 }
 
-@keyframes floatDelay {
+@keyframes subtleFloatDelay {
   0%, 100% {
     transform: translateY(0px);
   }
   50% {
-    transform: translateY(-15px);
+    transform: translateY(-8px);
+  }
+}
+
+@keyframes gentlePulse {
+  0%, 100% {
+    opacity: 1;
+  }
+  50% {
+    opacity: 0.8;
   }
 }
 
 .animate-fade-in {
-  animation: fadeIn 0.8s ease-out forwards;
+  animation: fadeIn 1s cubic-bezier(0.4, 0, 0.2, 1) forwards;
 }
 
 .animate-fade-in-delay {
-  animation: fadeInDelay 1.2s ease-out forwards;
+  animation: fadeInDelay 1.4s cubic-bezier(0.4, 0, 0.2, 1) forwards;
 }
 
 .animate-float {
-  animation: float 3s ease-in-out infinite;
+  animation: subtleFloat 4s ease-in-out infinite;
 }
 
 .animate-float-delay {
-  animation: floatDelay 3s ease-in-out infinite;
+  animation: subtleFloatDelay 4s ease-in-out infinite;
   animation-delay: 0.5s;
+}
+
+.animate-subtle-float {
+  animation: subtleFloat 5s ease-in-out infinite;
+}
+
+.animate-gentle-pulse {
+  animation: gentlePulse 3s ease-in-out infinite;
+}
+
+/* Monumental Chain Animation - Extremely Slow Cinematic Motion */
+@keyframes chainDrift {
+  0%, 100% {
+    transform: scale(2.2) translateX(-15%) translateY(10%) rotate(-8deg);
+  }
+  50% {
+    transform: scale(2.25) translateX(-14%) translateY(9%) rotate(-7.5deg);
+  }
+}
+
+.chain-container {
+  animation: chainDrift 40s ease-in-out infinite;
+  will-change: transform;
 }
 
 /* Gradient utilities */

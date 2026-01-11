@@ -1,6 +1,7 @@
 'use client';
 
 import Link from 'next/link';
+import Image from 'next/image';
 
 export function LandingFooter() {
     return (
@@ -10,10 +11,19 @@ export function LandingFooter() {
                     {/* Brand Column */}
                     <div className="space-y-4">
                         <div className="flex items-center gap-3">
-                            <div className="w-10 h-10 bg-gradient-to-br from-orange-500 to-amber-500 rounded-lg flex items-center justify-center">
-                                <span className="text-white text-xl font-bold">C</span>
-                            </div>
-                            <span className="text-2xl font-black text-white">CitraChain</span>
+                            <Image
+                                src="/logo.png"
+                                alt="CitraChain Logo"
+                                width={50}
+                                height={50}
+                            />
+                            <Image
+                                src="/title.png"
+                                alt="CitraChain"
+                                width={165}
+                                height={33}
+                                className="brightness-0 invert"
+                            />
                         </div>
                         <p className="text-gray-400 leading-relaxed">
                             Bringing transparency to agricultural supply chains with blockchain technology.
