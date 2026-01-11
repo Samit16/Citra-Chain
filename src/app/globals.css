@@ -7,7 +7,7 @@
     /* Background: Richer warm gray/beige for separation from white cards */
     --background: 35 25% 96%;
     /* Foreground: Deep, rich warm black */
-    --foreground: 20 15% 12%; 
+    --foreground: 20 15% 12%;
 
     /* Card: Pure white for pop */
     --card: 0 0% 100%;
@@ -18,7 +18,7 @@
     --popover-foreground: 20 15% 12%;
 
     /* Primary: Deep, vibrant Nagpur Orange */
-    --primary: 26 100% 55%; 
+    --primary: 26 100% 55%;
     --primary-foreground: 0 0% 100%;
 
     /* Secondary: Warm neutral */
@@ -43,13 +43,13 @@
     --ring: 26 100% 55%;
 
     --radius: 0.8rem;
-    
+
     --chart-1: 26 100% 55%;
     --chart-2: 173 58% 39%;
     --chart-3: 197 37% 24%;
     --chart-4: 43 74% 66%;
     --chart-5: 27 87% 67%;
-    
+
     --sidebar-background: 0 0% 100%;
     --sidebar-foreground: 240 5.3% 26.1%;
     --sidebar-primary: 240 5.9% 10%;
@@ -100,6 +100,7 @@
   * {
     @apply border-border;
   }
+
   body {
     @apply bg-background text-foreground;
   }
@@ -111,6 +112,7 @@
     opacity: 0;
     transform: translateY(15px);
   }
+
   to {
     opacity: 1;
     transform: translateY(0);
@@ -122,10 +124,12 @@
     opacity: 0;
     transform: translateY(20px);
   }
+
   40% {
     opacity: 0;
     transform: translateY(20px);
   }
+
   100% {
     opacity: 1;
     transform: translateY(0);
@@ -133,27 +137,36 @@
 }
 
 @keyframes subtleFloat {
-  0%, 100% {
+
+  0%,
+  100% {
     transform: translateY(0px);
   }
+
   50% {
     transform: translateY(-6px);
   }
 }
 
 @keyframes subtleFloatDelay {
-  0%, 100% {
+
+  0%,
+  100% {
     transform: translateY(0px);
   }
+
   50% {
     transform: translateY(-8px);
   }
 }
 
 @keyframes gentlePulse {
-  0%, 100% {
+
+  0%,
+  100% {
     opacity: 1;
   }
+
   50% {
     opacity: 0.8;
   }
@@ -185,17 +198,21 @@
 }
 
 /* Monumental Chain Animation - Extremely Slow Cinematic Motion */
+/* Diagonal flow from bottom-left to top-right */
 @keyframes chainDrift {
-  0%, 100% {
-    transform: scale(2.2) translateX(-15%) translateY(10%) rotate(-8deg);
+
+  0%,
+  100% {
+    transform: scale(1.82) translateX(-29%) translateY(-32%) rotate(25deg);
   }
+
   50% {
-    transform: scale(2.25) translateX(-14%) translateY(9%) rotate(-7.5deg);
+    transform: scale(1.82) translateX(-27%) translateY(-28%) rotate(25.5deg);
   }
 }
 
 .chain-container {
-  animation: chainDrift 40s ease-in-out infinite;
+  animation: chainDrift 45s ease-in-out infinite;
   will-change: transform;
 }
 

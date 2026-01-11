@@ -19,27 +19,33 @@ export function HeroSection() {
         {/* Layer 1: Base Background Gradient */}
         <div className="absolute inset-0 bg-gradient-to-br from-orange-50/80 via-white/90 to-amber-50/40 z-0" />
 
-        {/* Layer 2: MONUMENTAL CHAIN - The Visual Backbone */}
+        {/* Layer 2: STRUCTURAL CHAIN - Wide Foundation Layer */}
         <div
           className="absolute inset-0 z-[1] overflow-visible chain-container"
           style={{
-            transform: 'scale(2.2) translateX(-15%) translateY(10%) rotate(-8deg)',
+            transform: 'scale(1.82) translateX(-29%) translateY(-32%) rotate(25deg)',
             transformOrigin: 'bottom left',
+            filter: 'contrast(1.15) saturate(1.2) brightness(1.05) drop-shadow(0 20px 30px rgba(0,0,0,0.1))',
           }}
         >
-          <spline-viewer
-            url="https://prod.spline.design/RzgwFZ7Wfs52rrcc/scene.splinecode"
-            className="w-full h-full"
-          />
+          <div className="absolute inset-0 opacity-100">
+            <spline-viewer
+              url="https://prod.spline.design/RzgwFZ7Wfs52rrcc/scene.splinecode"
+              className="w-full h-full"
+            />
+          </div>
         </div>
 
         {/* Layer 3: Atmospheric Depth & Text Protection */}
-        {/* Subtle blur overlay where chain passes behind text for readability */}
-        <div className="absolute inset-0 z-[2] bg-gradient-to-br from-white/20 via-transparent to-orange-50/10 backdrop-blur-[0.5px]" />
+        {/* Subtle gradient overlay where chain passes behind text */}
+        <div className="absolute inset-0 z-[2] bg-gradient-to-br from-white/30 via-transparent to-transparent" />
 
-        {/* Layer 4: Decorative Glows - Softer now that chain is dominant */}
-        <div className="absolute top-20 right-0 w-96 h-96 bg-gradient-radial from-orange-200/20 via-orange-100/10 to-transparent rounded-full blur-3xl z-[3]" />
-        <div className="absolute bottom-0 left-0 w-[600px] h-[600px] bg-gradient-radial from-amber-200/15 via-yellow-100/5 to-transparent rounded-full blur-3xl z-[3]" />
+        {/* Text readability enhancement - soft glow behind headline area */}
+        <div className="absolute top-0 left-0 right-0 h-2/3 bg-gradient-to-b from-white/20 to-transparent z-[2]" />
+
+        {/* Layer 4: Decorative Atmospheric Glows - Softer for structural chain */}
+        <div className="absolute top-20 right-0 w-96 h-96 bg-gradient-radial from-orange-200/15 via-orange-100/8 to-transparent rounded-full blur-3xl z-[3]" />
+        <div className="absolute bottom-0 left-0 w-[600px] h-[600px] bg-gradient-radial from-amber-200/12 via-yellow-100/5 to-transparent rounded-full blur-3xl z-[3]" />
 
         {/* Layer 5: Content Container - Above everything */}
         <div className="container mx-auto px-6 py-20 relative z-10">
